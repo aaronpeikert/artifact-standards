@@ -185,4 +185,169 @@ principles:
                   The packaging requirement is satisfied when either
                   a supported container build definition or a supported
                   OVF/OVA virtual machine image is present.
-                  
+
+  - id: as:hardware-disclosure
+    name: Hardware Environment Disclosure
+
+    study_tags:
+      - as:benchmarking
+      - as:artifact-evaluation
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+
+    rationale: >
+      Performance results, timing measurements, and resource-sensitive
+      behavior depend on the hardware an artifact was executed on.
+      Without a record of the CPU, memory, storage, and accelerator
+      configuration used, evaluators cannot interpret reported numbers,
+      compare them across machines, or judge whether observed
+      performance is reproducible on different hardware.
+
+    implementations:
+
+      - id: as:system-introspection-dump
+        name: Raw System Introspection Dump
+
+        study_tags:
+          - as:benchmarking
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Capturing the verbatim output of standard system introspection
+          utilities is the lowest-effort way to record the hardware an
+          artifact ran on. It requires no hand-authored schema and is
+          harder to misreport than a manually typed description, though
+          it is not portable across operating systems and is not
+          machine-checkable beyond file presence and shape.
+
+        creation_guidance:
+
+          description: >
+            Authors should capture the output of standard hardware
+            introspection tools (e.g., `lscpu -J`, `lshw -json`, `nproc`,
+            `free -h`, and `nvidia-smi --query-gpu=... --format=csv` where
+            a GPU was used) at the time benchmarks were run, and commit
+            this output alongside the results as `hardware.json` and/or
+            a human-readable `HARDWARE.md` summary at the artifact root.
+            If benchmarks were run on more than one machine, authors
+            should provide one dump per machine, named accordingly
+            (e.g., `hardware-node1.json`).
+
+          examples:
+            - hardware.json (lscpu -J output)
+            - hardware.json (lshw -json output)
+            - HARDWARE.md (hand-summarized from the above)
+            - hardware-node1.json / hardware-node2.json (multi-machine)
+
+        checks_guidance:
+
+          human:
+
+            - id: as:hardware-dump-human-check
+
+              description: >
+                Verify that a hardware description file is present at
+                the artifact root (one per machine, for multi-node
+                benchmarks) and that it identifies at minimum the CPU
+                model, core/thread count, and total memory used during
+                the reported benchmarks; and, where a GPU was used, the
+                GPU model and memory.
+
+              evidence:
+                - hardware.json
+                - HARDWARE.md
+                - Benchmark scripts referencing the hardware file
+
+          automated:
+
+            checks:
+
+              - id: as:hardware-file-present
+
+                description: >
+                  Verify that a hardware description file is present
+                  in the artifact package.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                  - id: hardware_file_pattern
+                    description: >
+                      Filename pattern(s) accepted as a hardware
+                      description file.
+                    type: string
+                    required: false
+                    default: "hardware*.json|HARDWARE.md"
+                    examples:
+                      - hardware.json
+                      - hardware-node1.json
+                      - HARDWARE.md
+
+                command: >
+                  find "${artifact_root}" -maxdepth 2 -type f
+                  \( -iname "hardware*.json" -o -iname "HARDWARE.md" \)
+
+                expected_result: >
+                  At least one matching file is found.
+
+              - id: as:hardware-json-well-formed
+
+                description: >
+                  Verify that any hardware.json file is well-formed
+                  JSON and contains identifiable CPU information (a
+                  "model name" field from lscpu, or a "product" field
+                  under a class="processor" node from lshw).
+
+                inputs:
+
+                  - id: hardware_json_path
+                    description: >
+                      Path to the hardware.json file to validate.
+                    type: file
+                    required: false
+                    default: "./hardware.json"
+                    examples:
+                      - "./hardware.json"
+                      - "./hardware-node1.json"
+
+                command: >
+                  jq -e '.. | objects | select(has("model name") or
+                  has("modelName") or has("product"))'
+                  "${hardware_json_path}" > /dev/null
+
+                expected_result: >
+                  Exit code 0.
+
+            combination_rules:
+
+              - id: as:hardware-disclosure-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:hardware-file-present
+
+                description: >
+                  The disclosure requirement is satisfied when a
+                  hardware description file is present. `as:hardware-json-valid`
+                  is an additional quality check on well-formedness and
+                  content, not required for the base requirement to
+                  pass — this mirrors the ad hoc nature of the
+                  practice: presence is checkable, semantic
+                  completeness is not.
