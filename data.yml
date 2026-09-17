@@ -1,7 +1,7 @@
 id: as:example
 name: Artifact Standards Example
 
-study_tags:
+method_type_tags:
 
   - id: as:artifact-evaluation
     name: Artifact Evaluation
@@ -43,7 +43,7 @@ principles:
   - id: as:reproducible-installation
     name: Reproducible Installation — Generic
 
-    study_tags:
+    method_type_tags:
       - as:artifact-evaluation
       - as:benchmarking
 
@@ -66,7 +66,7 @@ principles:
 
         check_level: hygiene
 
-        study_tags:
+        method_type_tags:
           - as:artifact-evaluation
 
         artifact_tags:

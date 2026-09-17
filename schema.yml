@@ -35,10 +35,10 @@ classes:
         range: string
         required: true
 
-      study_tags:
+      method_type_tags:
         description: >
-          Controlled vocabulary of study types or research contexts.
-        range: StudyTag
+          Controlled vocabulary of method types or research contexts.
+        range: MethodTypeTag
         multivalued: true
         inlined_as_list: true
 
@@ -74,7 +74,7 @@ classes:
         range: string
         required: true
 
-      study_tags:
+      method_type_tags:
         description: >
           References to study tags for which this principle is applicable.
         range: uriorcurie
@@ -128,7 +128,7 @@ classes:
           acceptance.
         range: CheckLevel
 
-      study_tags:
+      method_type_tags:
         description: >
           References to study tags for which this implementation is applicable.
         range: uriorcurie
@@ -357,7 +357,7 @@ classes:
         range: string
 
 
-  StudyTag:
+  MethodTypeTag:
     description: >
       A controlled vocabulary term describing a study type or
       research context.
