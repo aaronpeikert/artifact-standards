@@ -120,6 +120,14 @@ classes:
         range: string
         required: true
 
+      check_level:
+        description: >
+          Indicates how this implementation relates to acceptance decisions.
+          Hygiene standards are baseline requirements; quality standards indicate
+          excellence above the baseline; optional standards are not required for
+          acceptance.
+        range: CheckLevel
+
       study_tags:
         description: >
           References to study tags for which this implementation is applicable.
@@ -389,7 +397,104 @@ classes:
         range: string
 
 
+  VenueRegistry:
+    description: >
+      A registry of venues and their required standards.
+
+    attributes:
+
+      venues:
+        description: >
+          Conferences, journals, and other venues with their required standards.
+        range: Venue
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+
+  Venue:
+    description: >
+      A conference, journal, or other venue that requires specific implementations.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        range: string
+        required: true
+
+      type:
+        range: VenueType
+        required: true
+
+      required_standards:
+        description: >
+          Implementations (standards) required by this venue, with optional
+          venue-specific display name overrides.
+        range: VenueStandardRef
+        multivalued: true
+        inlined_as_list: true
+
+
+  VenueStandardRef:
+    description: >
+      A reference from a venue to a required implementation (standard),
+      optionally overriding the display name for that venue.
+
+    attributes:
+
+      standard:
+        description: >
+          CURIE identifier of the required implementation.
+        range: uriorcurie
+        required: true
+
+      display_name:
+        description: >
+          Venue-specific display name shown instead of the generic implementation name.
+        range: string
+
+
 enums:
+
+  CheckLevel:
+    permissible_values:
+
+      hygiene:
+        description: >
+          Baseline requirement. Artifacts that do not satisfy this standard
+          are unlikely to be accepted.
+
+      quality:
+        description: >
+          Quality indicator. Satisfying this standard demonstrates excellence
+          above the baseline.
+
+      optional:
+        description: >
+          Not required for acceptance. Satisfying this standard is encouraged
+          but not expected.
+
+
+  VenueType:
+    permissible_values:
+
+      conference:
+        description: >
+          An academic conference or symposium.
+
+      journal:
+        description: >
+          An academic journal or periodical.
+
+      workshop:
+        description: >
+          An academic workshop.
+
 
   CheckInputType:
     permissible_values:

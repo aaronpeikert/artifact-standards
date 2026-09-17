@@ -41,7 +41,7 @@ artifact_tags:
 principles:
 
   - id: as:reproducible-installation
-    name: Reproducible Installation
+    name: Reproducible Installation — Generic
 
     study_tags:
       - as:artifact-evaluation
@@ -63,6 +63,8 @@ principles:
 
       - id: as:container-or-vm
         name: Container or Virtual Machine
+
+        check_level: hygiene
 
         study_tags:
           - as:artifact-evaluation

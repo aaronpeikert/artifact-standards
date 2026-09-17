@@ -1,0 +1,9 @@
+venues:
+
+  - id: as:ase-2026
+    name: ASE 2026
+    type: conference
+    required_standards:
+
+      - standard: as:container-or-vm
+        display_name: Container or VM — ASE 2026
