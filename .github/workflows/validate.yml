@@ -12,6 +12,30 @@ on:
     branches: [ "main" ]
 
 jobs:
+  rerun-open-prs:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Re-run validate on open PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          prs=$(gh api "repos/$REPO/pulls?state=open&per_page=100" --jq '.[].number')
+          for pr in $prs; do
+            run_id=$(gh api "repos/$REPO/actions/workflows/validate.yml/runs?event=pull_request&per_page=100" \
+              --jq "[.workflow_runs[] | select(.pull_requests[].number == $pr)] | first | .id // empty")
+            if [ -n "$run_id" ]; then
+              echo "Re-running validate for PR #$pr (run $run_id)"
+              gh api "repos/$REPO/actions/runs/$run_id/rerun" --method POST || true
+            else
+              echo "No previous validate run found for PR #$pr"
+            fi
+          done
+
   build:
     runs-on: ubuntu-latest
     permissions:
