@@ -1,0 +1,430 @@
+id: https://w3id.org/artifact-standards
+name: artifact_standards
+title: Research Artifact Standards
+description: >
+  A schema for describing principles and concrete implementations
+  used to guide the creation and evaluation of research artifacts.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  as: https://w3id.org/artifact-standards/
+
+default_prefix: as
+default_range: string
+
+imports:
+  - linkml:types
+
+
+classes:
+
+  Repository:
+    description: >
+      A repository containing reusable principles for research artifact
+      creation and evaluation.
+    tree_root: true
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        range: string
+        required: true
+
+      study_tags:
+        description: >
+          Controlled vocabulary of study types or research contexts.
+        range: StudyTag
+        multivalued: true
+        inlined_as_list: true
+
+      artifact_tags:
+        description: >
+          Controlled vocabulary of artifact types or characteristics.
+        range: ArtifactTag
+        multivalued: true
+        inlined_as_list: true
+
+      principles:
+        range: Principle
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+
+  Principle:
+    description: >
+      A general, implementation-independent requirement or desirable
+      property of a research artifact.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        description: >
+          Human-readable name of the principle.
+        range: string
+        required: true
+
+      study_tags:
+        description: >
+          References to study tags for which this principle is applicable.
+        range: uriorcurie
+        multivalued: true
+
+      artifact_tags:
+        description: >
+          References to artifact tags for which this principle is applicable.
+        range: uriorcurie
+        multivalued: true
+
+      rationale:
+        description: >
+          Explanation of why the principle is relevant or desirable.
+        range: string
+        required: true
+
+      implementations:
+        description: >
+          Concrete mechanisms or approaches through which the principle
+          can be satisfied.
+        range: Implementation
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+
+  Implementation:
+    description: >
+      A concrete way of satisfying a principle. Implementations contain
+      guidance for artifact creators and artifact evaluators.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        description: >
+          Human-readable name of the implementation.
+        range: string
+        required: true
+
+      study_tags:
+        description: >
+          References to study tags for which this implementation is applicable.
+        range: uriorcurie
+        multivalued: true
+
+      artifact_tags:
+        description: >
+          References to artifact tags for which this implementation is applicable.
+        range: uriorcurie
+        multivalued: true
+
+      rationale:
+        description: >
+          Explanation of why this particular implementation is useful
+          for satisfying the principle.
+        range: string
+        required: true
+
+      creation_guidance:
+        description: >
+          Guidance for artifact authors on how to implement the principle
+          using this implementation.
+        range: CreationGuidance
+        required: true
+        inlined: true
+
+      checks_guidance:
+        description: >
+          Guidance for evaluators on how to determine whether the
+          implementation has been satisfied.
+        range: ChecksGuidance
+        required: true
+        inlined: true
+
+
+  CreationGuidance:
+    description: >
+      Guidance describing how an artifact author should implement
+      the principle using this implementation.
+
+    attributes:
+
+      description:
+        range: string
+        required: true
+
+      examples:
+        description: >
+          Concrete examples or technologies that can be used.
+        range: string
+        multivalued: true
+
+
+  ChecksGuidance:
+    description: >
+      Guidance describing how evaluators can check whether an
+      implementation has been satisfied.
+
+    attributes:
+
+      human:
+        description: >
+          Checks performed through human inspection or judgment.
+        range: HumanCheck
+        multivalued: true
+        inlined_as_list: true
+
+      automated:
+        description: >
+          Automated checks and rules for combining their results.
+        range: AutomatedChecks
+        inlined: true
+
+
+  HumanCheck:
+    description: >
+      A check that requires human inspection or judgment.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      description:
+        range: string
+        required: true
+
+      evidence:
+        description: >
+          Evidence that the evaluator should inspect.
+        range: string
+        multivalued: true
+
+
+  AutomatedChecks:
+    description: >
+      A collection of automated checks and rules for combining
+      their results.
+
+    attributes:
+
+      checks:
+        description: >
+          Individual automated checks.
+        range: AutomatedCheck
+        multivalued: true
+        inlined_as_list: true
+
+      combination_rules:
+        description: >
+          Rules defining how results from multiple automated checks
+          are combined.
+        range: CombinationRule
+        multivalued: true
+        inlined_as_list: true
+
+
+  AutomatedCheck:
+    description: >
+      A machine-executable check for assessing compliance with
+      an implementation.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      description:
+        description: >
+          Human-readable description of what the check verifies.
+        range: string
+        required: true
+
+      inputs:
+        description: >
+          Parameters that may be supplied to the automated check.
+        range: CheckInput
+        multivalued: true
+        inlined_as_list: true
+
+      command:
+        description: >
+          Command, script, query, or other machine-executable
+          specification of the check. Inputs may be referenced
+          by their identifiers.
+        range: string
+        required: true
+
+      expected_result:
+        description: >
+          Result indicating that the automated check has passed.
+        range: string
+        required: true
+
+
+  CheckInput:
+    description: >
+      A parameter supplied to an automated check.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: string
+        required: true
+
+      description:
+        description: >
+          Explanation of what the input represents.
+        range: string
+        required: true
+
+      type:
+        description: >
+          Expected data type of the input.
+        range: CheckInputType
+        required: true
+
+      required:
+        description: >
+          Whether the input must be explicitly supplied by the evaluator
+          when no default value is available.
+        range: boolean
+        ifabsent: false
+
+      default:
+        description: >
+          Default value used when the evaluator does not provide
+          an explicit value.
+        range: string
+
+      examples:
+        description: >
+          Example values that can be supplied for the input.
+        range: string
+        multivalued: true
+
+
+  CombinationRule:
+    description: >
+      A rule for combining the results of multiple automated checks.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      operator:
+        range: CombinationOperator
+        required: true
+
+      checks:
+        description: >
+          IDs of automated checks to which the combination rule applies.
+        range: uriorcurie
+        multivalued: true
+        required: true
+
+      description:
+        range: string
+
+
+  StudyTag:
+    description: >
+      A controlled vocabulary term describing a study type or
+      research context.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        range: string
+        required: true
+
+      description:
+        range: string
+
+
+  ArtifactTag:
+    description: >
+      A controlled vocabulary term describing an artifact type
+      or artifact characteristic.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        range: string
+        required: true
+
+      description:
+        range: string
+
+
+enums:
+
+  CheckInputType:
+    permissible_values:
+
+      string:
+      integer:
+      float:
+      boolean:
+      path:
+      file:
+      directory:
+      command:
+      uri:
+
+
+  CombinationOperator:
+    permissible_values:
+
+      AND:
+        description: >
+          All referenced checks must pass.
+
+      OR:
+        description: >
+          At least one referenced check must pass.
+
+      AT_LEAST:
+        description: >
+          At least a specified number of referenced checks must pass.
+
+      ANY:
+        description: >
+          At least one applicable check must produce a valid result.
+
+      CUSTOM:
+        description: >
+          A custom combination rule is defined in the description.
+          

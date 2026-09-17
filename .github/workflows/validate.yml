@@ -1,0 +1,75 @@
+name: Validate data.yml
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - data.yml
+      - .github/workflows/validate.yml
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9' # Choose the version you need
+
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Test installation of linkml
+      run: |
+        linkml-validate --version
+    - name: Validate data.yml
+      run: |
+        linkml-validate -s schema.yml data.yml
+    - name: Add comment success
+      if: success() && (github.event_name == 'pull_request')
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const issue_number = context.issue.number;
+          const commentBody = `:white_check_mark: Validation suceeded`;
+          const comment = { owner: context.repo.owner, repo: context.repo.repo, issue_number: issue_number, body: commentBody };
+          github.rest.issues.createComment(comment);
+    - name: Store failure output
+      if: failure() && (github.event_name == 'pull_request')
+      id: validate
+      run: |
+        validation_output=$(linkml-validate -s schema.yml data.yml 2>&1 || true)
+        echo "validation_output<<EOF" >> $GITHUB_ENV
+        echo "$validation_output" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+    - name: Add comment failure
+      if: failure() && (github.event_name == 'pull_request')
+      uses: actions/github-script@v6
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          const validationOutput = process.env.validation_output;
+          // Filter out lines that start with 'INFO:'
+          const relevantLines = validationOutput.split('\n').filter(line => !line.startsWith('INFO:'));
+          if (relevantLines.length > 0) {
+            const issue_number = context.issue.number;
+            const commentBody = `:x: Validation Failed:\n${relevantLines.join('\n')}`;
+            const comment = { owner: context.repo.owner, repo: context.repo.repo, issue_number: issue_number, body: commentBody };
+            github.rest.issues.createComment(comment);
+          }
