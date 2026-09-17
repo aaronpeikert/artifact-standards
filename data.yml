@@ -1,0 +1,188 @@
+id: as:example
+name: Artifact Standards Example
+
+study_tags:
+
+  - id: as:artifact-evaluation
+    name: Artifact Evaluation
+    description: >
+      Evaluation of research artifacts accompanying a scientific
+      publication.
+
+  - id: as:benchmarking
+    name: Benchmarking
+    description: >
+      Studies that evaluate performance or behavior using benchmarks.
+
+
+artifact_tags:
+
+  - id: as:executable
+    name: Executable
+    description: >
+      An artifact that can be executed to produce behavior or results.
+
+  - id: as:tool
+    name: Tool
+    description: >
+      A research software tool.
+
+  - id: as:prototype
+    name: Prototype
+    description: >
+      A research prototype or proof-of-concept.
+
+  - id: as:data
+    name: Data
+    description: >
+      A dataset or other research data artifact.
+
+
+principles:
+
+  - id: as:reproducible-installation
+    name: Reproducible Installation
+
+    study_tags:
+      - as:artifact-evaluation
+      - as:benchmarking
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+
+    rationale: >
+      Research artifacts may depend on specific operating systems,
+      software packages, libraries, and system configurations.
+      Providing a reproducible installation environment reduces
+      installation problems during artifact evaluation and makes
+      execution more reproducible.
+
+    implementations:
+
+      - id: as:container-or-vm
+        name: Container or Virtual Machine
+
+        study_tags:
+          - as:artifact-evaluation
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Packaging the artifact together with its execution environment
+          reduces dependency-related installation problems and allows
+          evaluators to execute the artifact in a preconfigured environment.
+
+        creation_guidance:
+
+          description: >
+            Authors must provide their artifacts as Container
+            (Docker or Podman) or VM (OVF/OVA) images. If the artifact
+            requires a different submission format, authors should
+            contact the artifact evaluation committee chairs.
+
+          examples:
+            - Docker image
+            - Podman/OCI image
+            - OVF virtual machine
+            - OVA virtual appliance
+
+        checks_guidance:
+
+          human:
+
+            - id: as:container-vm-human-check
+
+              description: >
+                Verify that the submitted artifact includes a Container
+                (Docker or Podman) or VM (OVF/OVA) image and that the
+                provided instructions explain how to execute it.
+
+              evidence:
+                - Container image
+                - Dockerfile or Containerfile
+                - OVF/OVA image
+                - Execution instructions
+
+          automated:
+
+            checks:
+
+              - id: as:container-present
+
+                description: >
+                  Verify that a container build definition is present
+                  in the artifact package.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                  - id: container_definition
+                    description: >
+                      Name of the container build definition.
+                    type: file
+                    required: false
+                    default: "Dockerfile"
+                    examples:
+                      - Dockerfile
+                      - Containerfile
+
+                command: >
+                  test -f "${artifact_root}/${container_definition}"
+
+                expected_result: >
+                  Exit code 0.
+
+              - id: as:vm-present
+
+                description: >
+                  Verify that an OVF or OVA virtual machine artifact
+                  is present.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                command: >
+                  find "${artifact_root}" -type f
+                  \( -name "*.ovf" -o -name "*.ova" \)
+
+                expected_result: >
+                  At least one matching file is found.
+
+            combination_rules:
+
+              - id: as:packaging-present
+
+                operator: OR
+
+                checks:
+                  - as:container-present
+                  - as:vm-present
+
+                description: >
+                  The packaging requirement is satisfied when either
+                  a supported container build definition or a supported
+                  OVF/OVA virtual machine image is present.
+                  
