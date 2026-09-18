@@ -3,16 +3,130 @@ name: Artifact Standards Example
 
 method_type_tags:
 
-  - id: as:artifact-evaluation
-    name: Artifact Evaluation
+  - id: as:engineering-research
+    name: Engineering Research
     description: >
-      Evaluation of research artifacts accompanying a scientific
-      publication.
+      Research that invents and evaluates technological artifacts.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/EngineeringResearch
 
+  - id: as:case-study
+    name: Case Study
+    description: >
+      An empirical inquiry that investigates a contemporary phenomenon (the
+      "case") in depth and within its real-world context, especially when the
+      boundaries between phenomenon and context are unclear.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/CaseStudy
+
+  - id: as:grounded-theory
+    name: Grounded Theory
+    description: >
+      A study of a specific area of interest or phenomenon that involves
+      iterative and interleaved rounds of qualitative data collection and
+      analysis, leading to key patterns (e.g. concepts, categories).
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/GroundedTheory
+
+  - id: as:qualitative-survey
+    name: Qualitative Survey
+    description: >
+      Research comprising semi-structured or open-ended interviews.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/QualitativeSurveys
+
+  # Quantitative
   - id: as:benchmarking
     name: Benchmarking
     description: >
-      Studies that evaluate performance or behavior using benchmarks.
+      A study in which a software system is assessed using a standard tool
+      (i.e. a benchmark) for competitively evaluating and comparing methods,
+      techniques or systems according to specific characteristics such as
+      performance, dependability, or security.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/Benchmarking
+
+  - id: as:data-science
+    name: Data Science
+    description: >
+      Studies that analyze software engineering phenomena or artifacts using
+      data-centric analysis methods such as machine learning or other
+      computational intelligence approaches as well as search-based approaches.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/DataScience
+
+  - id: as:experiment
+    name: Experiment
+    description: >
+      A study in which an intervention is deliberately introduced to observe
+      its effects on some aspects of reality under controlled conditions.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/Experiments
+
+  - id: as:longitudinal
+    name: Longitudinal Study
+    description: >
+      A study focusing on the changes in and evolution of a phenomenon over
+      time.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/Longitudinal
+
+  - id: as:optimization-study
+    name: Optimization Study
+    description: >
+      Research studies that focus on the formulation of software engineering
+      problems as search problems, and apply optimization techniques to solve
+      such problems.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/OptimizationStudies
+
+  - id: as:quantitative-simulation
+    name: Quantitative Simulation
+    description: >
+      A study that involves developing and using a mathematical model that
+      imitates a real-world system's behavior, which often entails problem
+      understanding, data collection, model development, verification,
+      validation, design of experiments, data analysis, and implementation
+      of results.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/QuantitativeSimulation
+
+  - id: as:questionnaire-survey
+    name: Questionnaire Survey
+    description: >
+      A study in which a sample of respondents answer a series of (mostly
+      structured) questions, typically through a computerized or paper form.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/QuestionnaireSurveys
+
+  - id: as:repository-mining
+    name: Repository Mining
+    description: >
+      A study that quantitatively analyzes a dataset extracted from a platform
+      hosting of structured or semi-structured text (e.g. a source code
+      repository).
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/RepositoryMining
+
+  # Literature Review
+  - id: as:case-survey
+    name: Case Survey
+    description: >
+      A study that aims to generalize results about a complex phenomenon by
+      systematically converting qualitative descriptions available in published
+      case studies into quantitative data and analyzing the converted data.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/CaseSurvey
+
+  - id: as:systematic-review
+    name: Systematic Review
+    description: >
+      A study that appraises, analyses, and synthesizes primary or secondary
+      literature to provide a complete, exhaustive summary of current evidence
+      regarding one or more specific topics or research questions.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/SystematicReviews
+
+  # Other
+  - id: as:meta-science
+    name: Meta-Science
+    description: >
+      A paper that analyses an issue of research methodology or makes
+      recommendations for conducting research.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/MetaScience
+
+  - id: as:replication
+    name: Replication
+    description: >
+      A study that deliberately repeats a previous study (the "original study")
+      to determine whether its results can be reproduced.
+      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/Replication
 
 
 artifact_tags:
@@ -44,7 +158,6 @@ principles:
     name: Reproducible Installation — Generic
 
     method_type_tags:
-      - as:artifact-evaluation
       - as:benchmarking
 
     artifact_tags:
@@ -65,9 +178,6 @@ principles:
         name: Container or Virtual Machine
 
         check_level: hygiene
-
-        method_type_tags:
-          - as:artifact-evaluation
 
         artifact_tags:
           - as:executable
@@ -193,7 +303,6 @@ principles:
 
     method_type_tags:
       - as:benchmarking
-      - as:artifact-evaluation
 
     artifact_tags:
       - as:executable
