@@ -3,16 +3,135 @@ name: Artifact Standards Example
 
 method_type_tags:
 
+  # General
+  - id: as:general
+    name: General Standard
+    description: >
+      Applies to all empirical research in software engineering;
+      represents baseline expectations shared across all method types.
+
+  - id: as:engineering-research
+    name: Engineering Research
+    description: >
+      Studies that create and evaluate technological artifacts such as
+      tools, techniques, frameworks, or methods.
+
+  - id: as:mixed-methods
+    name: Mixed Methods
+    description: >
+      Studies that combine qualitative and quantitative approaches
+      within a single research design.
+
+  # Qualitative
+  - id: as:action-research
+    name: Action Research
+    description: >
+      Studies in which researchers collaborate with practitioners to
+      address real-world problems while generating knowledge.
+
+  - id: as:case-study
+    name: Case Study
+    description: >
+      In-depth empirical investigation of one or more phenomena within
+      their real-world context.
+
+  - id: as:grounded-theory
+    name: Grounded Theory
+    description: >
+      Studies that inductively derive theory from systematically
+      collected and analysed qualitative data.
+
+  - id: as:qualitative-survey
+    name: Qualitative Survey
+    description: >
+      Studies that collect and interpret non-numeric data from a
+      population using interviews, open-ended questionnaires, or
+      similar instruments.
+
+  # Quantitative
+  - id: as:benchmarking
+    name: Benchmarking
+    description: >
+      Studies that evaluate performance or behaviour using standardised
+      tasks or datasets.
+
+  - id: as:data-science
+    name: Data Science
+    description: >
+      Studies that extract insights from large or complex datasets using
+      statistical or machine-learning methods without a controlled
+      experimental design.
+
+  - id: as:experiment
+    name: Experiment
+    description: >
+      Studies that test causal hypotheses by manipulating independent
+      variables under controlled conditions.
+
+  - id: as:longitudinal
+    name: Longitudinal Study
+    description: >
+      Studies that observe the same subjects or systems repeatedly over
+      an extended period to detect change or development.
+
+  - id: as:optimization-study
+    name: Optimization Study
+    description: >
+      Studies that search for optimal solutions to a defined problem
+      using heuristic, metaheuristic, or exact techniques.
+
+  - id: as:quantitative-simulation
+    name: Quantitative Simulation
+    description: >
+      Studies that use computational models to generate and analyse
+      synthetic data about system behaviour.
+
+  - id: as:questionnaire-survey
+    name: Questionnaire Survey
+    description: >
+      Studies that collect structured, primarily numeric or ordinal
+      data from a population using standardised questionnaires.
+
+  - id: as:repository-mining
+    name: Repository Mining
+    description: >
+      Studies that extract and analyse data from software repositories
+      such as version control systems, issue trackers, or package
+      registries.
+
+  # Literature Review
+  - id: as:case-survey
+    name: Case Survey
+    description: >
+      Studies that systematically extract and aggregate qualitative
+      findings across a large collection of case study reports.
+
+  - id: as:systematic-review
+    name: Systematic Review
+    description: >
+      Studies that exhaustively identify, select, and synthesise
+      primary research on a defined question using an explicit,
+      reproducible protocol.
+
+  # Other
+  - id: as:meta-science
+    name: Meta-Science
+    description: >
+      Studies that investigate the research process itself, such as
+      replication rates, publication bias, or methodological trends.
+
+  - id: as:replication
+    name: Replication
+    description: >
+      Studies that repeat a prior study with the same or varied
+      conditions to assess reproducibility or generalisability.
+
+  # Venue-specific (not a SIGSOFT method type)
   - id: as:artifact-evaluation
     name: Artifact Evaluation
     description: >
       Evaluation of research artifacts accompanying a scientific
-      publication.
-
-  - id: as:benchmarking
-    name: Benchmarking
-    description: >
-      Studies that evaluate performance or behavior using benchmarks.
+      publication, as conducted by artifact evaluation committees.
 
 
 artifact_tags:
