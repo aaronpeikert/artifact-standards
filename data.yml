@@ -353,3 +353,175 @@ principles:
                   pass — this mirrors the ad hoc nature of the
                   practice: presence is checkable, semantic
                   completeness is not.
+
+  - id: as:replication-package
+    name: Replication Package — Generic
+
+    method_type_tags:
+      - as:artifact-evaluation
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+
+    rationale: >
+      A replication package bundles all materials needed to independently
+      verify the paper's claims: the artifact, data, scripts, and
+      documentation. Without a complete package, evaluators cannot
+      systematically assess whether reported results hold beyond
+      the paper's narrative.
+
+    implementations:
+
+      - id: as:readme-with-instructions
+        name: README with Reproduction Instructions
+
+        check_level: hygiene
+
+        method_type_tags:
+          - as:artifact-evaluation
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          A README at the artifact root describing what the artifact
+          does and how to reproduce results is the minimum entry point
+          for evaluators. Without clear instructions, evaluators cannot
+          begin assessment regardless of the artifact's quality.
+
+        creation_guidance:
+
+          description: >
+            Provide a README.md (or README.txt) at the artifact root
+            covering: (1) what the artifact is and which paper claims
+            it supports, (2) system requirements and dependencies,
+            (3) step-by-step reproduction instructions for key results,
+            (4) expected output and how to interpret it, and
+            (5) estimated runtime on reference hardware.
+
+          examples:
+            - README.md with sections Overview, Requirements, Reproducing Results, Expected Output
+            - README.md referencing a run.sh entry point and listing required Docker version
+
+        checks_guidance:
+
+          human:
+
+            - id: as:readme-human-check
+
+              description: >
+                Verify that a README is present and contains step-by-step
+                instructions sufficient for an evaluator unfamiliar with
+                the artifact to reproduce the paper's key results,
+                including system requirements and expected output.
+
+              evidence:
+                - README.md or README.txt at artifact root
+                - Step-by-step reproduction instructions
+                - Listed system requirements
+                - Description of expected output
+
+          automated:
+
+            checks:
+
+              - id: as:readme-file-present
+
+                description: >
+                  Check that a README file is present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f -iname "README*"
+
+                expected_result: >
+                  At least one README file is found at the artifact root.
+
+      - id: as:analysis-scripts
+        name: Analysis Scripts
+
+        check_level: quality
+
+        method_type_tags:
+          - as:artifact-evaluation
+
+        artifact_tags:
+          - as:data
+          - as:executable
+          - as:tool
+
+        rationale: >
+          Scripts that generated the tables, figures, and statistical
+          results in the paper allow evaluators to verify that reported
+          numbers match artifact outputs and enable independent
+          reanalysis with alternative methods.
+
+        creation_guidance:
+
+          description: >
+            Include all scripts used to generate figures, tables, and
+            statistical results reported in the paper. Document which
+            script produces which paper artifact (e.g., "run analysis.R
+            to reproduce Figure 3 and Table 2"). Prefer a single entry
+            point that runs all analyses.
+
+          examples:
+            - analysis.R or analysis.py generating all paper figures and tables
+            - scripts/ directory with one script per figure named to match paper labels
+            - Jupyter notebook reproducing all reported statistics with commentary
+
+        checks_guidance:
+
+          human:
+
+            - id: as:analysis-scripts-human-check
+
+              description: >
+                Verify that scripts generating reported results (figures,
+                tables, statistics) are present and that the README maps
+                each script to the paper artifact it produces.
+
+              evidence:
+                - R, Python, Julia, or shell analysis scripts
+                - Jupyter or R Markdown notebooks
+                - README mapping scripts to paper figures or tables
+
+          automated:
+
+            checks:
+
+              - id: as:analysis-script-present
+
+                description: >
+                  Check that at least one analysis script or notebook
+                  is present in the artifact.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -type f
+                  \( -name "*.R" -o -name "*.Rmd" -o -name "*.py"
+                  -o -name "*.jl" -o -name "*.ipynb" \)
+
+                expected_result: >
+                  At least one analysis script or notebook is found.
