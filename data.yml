@@ -9,24 +9,6 @@ method_type_tags:
       Research that invents and evaluates technological artifacts.
       See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/EngineeringResearch
 
-  - id: as:mixed-methods
-    name: Mixed Methods
-    description: >
-      Studies that use two or more approaches to data collection or analysis
-      to corroborate, complement and expand research findings
-      (multi-methodology) or combine and integrate inductive research with
-      deductive research (mixed methods), often but not necessarily relying
-      on qualitative and/or quantitative data.
-      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/MixedMethods
-
-  # Qualitative
-  - id: as:action-research
-    name: Action Research
-    description: >
-      Empirical research that investigates how an intervention, like the
-      introduction of a method or tool, affects a real-life context.
-      See https://www2.sigsoft.org/EmpiricalStandards/docs/standards/ActionResearch
-
   - id: as:case-study
     name: Case Study
     description: >
