@@ -353,3 +353,75 @@ principles:
                   pass — this mirrors the ad hoc nature of the
                   practice: presence is checkable, semantic
                   completeness is not.
+
+  - id: as:data-availability
+    name: Artifact Availability
+
+    study_tags:
+      - as:benchmarking
+      - as:artifact-evaluation
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+
+    rationale: >
+      Ensure long-term availability of your artifact
+
+    implementations:
+
+      - id: as:long-term-archival
+        name: Use a long-term archival service
+
+        check_level: hygiene
+
+        method_type_tags:
+          - as:artifact-evaluation
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Artifacts hosted on institutional pages or commercial cloud services
+          will disappear at some point, as observed by [Collberg and Proebsting
+          (2016)](https://doi.org/10.1145/2812803).
+
+        creation_guidance:
+
+          description: >
+            Authors must use a long-term archival service for their artifacts.
+
+          examples:
+            - Software Heritage (for software repositories)
+            - Zenodo
+            - FigShare
+
+        checks_guidance:
+
+          automated:
+
+            checks:
+
+              - id: as:artifact-availability-whitelist
+
+                description: >
+                  Verify that the submitted artifact is hosted on one long-term
+                  archival service.
+
+                inputs:
+
+                  - id: artifact_url
+                    description: >
+                      URL where the artifact is hosted.
+                    type: url
+                    required: true
+                    examples:
+                      - "https://zenodo.org/records/14677860"
+
+                command: >
+                  "$artifact_url" =~ ^https://(softwareheritage\.org|zenodo\.org|figshare\.com)(/|$)
+                expected_result: >
+                  Exit code 0.
