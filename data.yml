@@ -353,3 +353,440 @@ principles:
                   pass — this mirrors the ad hoc nature of the
                   practice: presence is checkable, semantic
                   completeness is not.
+
+  - id: as:open-data-availability
+    name: Open Data Availability — Generic
+
+    rationale: >
+      Empirical results can only be verified and built upon when the
+      underlying data are accessible. Publishing raw or deidentified
+      data under an open license allows independent reanalysis,
+      error detection, and reuse in future studies.
+
+    implementations:
+
+      - id: as:data-availability-statement
+        name: Data Availability Statement
+
+        check_level: hygiene
+
+        rationale: >
+          A concise statement explaining what data are available and
+          where—or why they cannot be released—gives readers the
+          minimum information needed to assess openness and
+          reproducibility.
+
+        creation_guidance:
+
+          description: >
+            Include a dedicated data availability section in the paper
+            (typically after the conclusion) and in the artifact README.
+            Either provide a working URL or DOI to the deposited data,
+            or explain why release is not possible (e.g., participant
+            privacy, contractual restriction).
+
+          examples:
+            - Section "Data Availability" with a Zenodo DOI link
+            - AVAILABILITY.md at the artifact root
+            - Statement that interview transcripts cannot be released due to participant privacy
+
+        checks_guidance:
+
+          human:
+
+            - id: as:data-availability-human-check
+
+              description: >
+                Verify that a data availability statement is present in
+                the paper or artifact and that it either provides a
+                working link to deposited data or gives a clear reason
+                why data cannot be released.
+
+              evidence:
+                - Data availability section in the paper
+                - AVAILABILITY.md or README section at artifact root
+                - Working DOI or persistent URL to deposited data
+                - Written justification for withholding data
+
+          automated:
+
+            checks:
+
+              - id: as:data-availability-file-present
+
+                description: >
+                  Check that a data availability file or README is
+                  present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 2 -type f
+                  \( -iname "AVAILABILITY*" -o -iname "DATA_AVAILABILITY*"
+                  -o -iname "README*" \)
+
+                expected_result: >
+                  At least one matching file is found.
+
+      - id: as:preserved-repository-deposit
+        name: Preserved Repository Deposit
+
+        check_level: quality
+
+        rationale: >
+          Personal websites, GitHub repositories, and consumer cloud
+          services may disappear or become inaccessible. Depositing
+          artifacts on a preserved academic repository (Zenodo, Figshare,
+          OSF, Software Heritage) provides a persistent DOI and
+          guarantees long-term availability.
+
+        creation_guidance:
+
+          description: >
+            Deposit all supplementary materials on a preserved academic
+            repository before submission and use the resulting DOI or
+            persistent URL as the canonical reference. Do not rely
+            solely on GitHub, personal websites, or commercial cloud
+            storage as the primary deposit.
+
+          examples:
+            - Zenodo (zenodo.org) — free, DOI minted automatically
+            - Figshare (figshare.com) — free, DOI minted automatically
+            - OSF (osf.io) — persistent URL and optional DOI
+            - Software Heritage (softwareheritage.org) — for source code archiving
+            - Institutional data repository
+
+        checks_guidance:
+
+          human:
+
+            - id: as:preserved-deposit-human-check
+
+              description: >
+                Verify that the artifact or its supplementary materials
+                are deposited on a preserved repository (not only on
+                GitHub or a personal website) and that a persistent DOI
+                or URL is referenced in the paper or README.
+
+              evidence:
+                - Zenodo, Figshare, OSF, or Software Heritage deposit link
+                - Persistent DOI in the paper, data availability section, or README
+
+          automated:
+
+            checks:
+
+              - id: as:doi-in-readme
+
+                description: >
+                  Check that the artifact README references a DOI,
+                  indicating deposit on a preserved repository.
+
+                inputs:
+
+                  - id: readme
+                    description: >
+                      Path to the artifact README file.
+                    type: file
+                    required: false
+                    default: "README.md"
+
+                command: >
+                  grep -qiE "(doi\.org|10\.[0-9]{4,}/)" "${readme}"
+
+                expected_result: >
+                  Exit code 0 (a DOI pattern is found in the README).
+
+  - id: as:open-artifact-licensing
+    name: Open Artifact Licensing — Generic
+
+    rationale: >
+      Without an explicit open license, materials cannot legally be
+      reused, modified, or redistributed even if they are publicly
+      accessible. An open license makes reuse unambiguous and
+      maximises the scientific value of released artifacts.
+
+    implementations:
+
+      - id: as:open-license-file
+        name: Open License File
+
+        check_level: quality
+
+        rationale: >
+          A LICENSE file at the artifact root makes the reuse terms
+          unambiguous at a glance. CC0 and CC-BY 4.0 are preferred
+          for data and documentation; MIT and Apache 2.0 are
+          preferred for software.
+
+        creation_guidance:
+
+          description: >
+            Place a LICENSE (or LICENSE.txt / LICENSE.md) file at the
+            root of the artifact containing the full text of an open
+            license. For data and documentation, prefer CC0 or CC-BY 4.0.
+            For software, MIT or Apache 2.0 are widely accepted.
+
+          examples:
+            - LICENSE containing the CC-BY 4.0 full text
+            - LICENSE containing the MIT license text
+            - README with SPDX identifier line (SPDX-License-Identifier: CC0-1.0)
+
+        checks_guidance:
+
+          human:
+
+            - id: as:open-license-human-check
+
+              description: >
+                Verify that an open license is clearly stated (in a
+                LICENSE file or SPDX identifier) and that the chosen
+                license permits reuse without unreasonable restrictions.
+
+              evidence:
+                - LICENSE or LICENSE.md file at artifact root
+                - SPDX license identifier in README or source files
+                - Open-source license badge in README
+
+          automated:
+
+            checks:
+
+              - id: as:license-file-present
+
+                description: >
+                  Check that a LICENSE file is present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f
+                  \( -iname "LICENSE" -o -iname "LICENSE.txt"
+                  -o -iname "LICENSE.md" \)
+
+                expected_result: >
+                  At least one matching file is found.
+
+              - id: as:open-license-content
+
+                description: >
+                  Check that the LICENSE file contains text associated
+                  with a recognised open license.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f -iname "LICENSE*"
+                  -exec grep -lqiE
+                  "creative commons|mit license|apache license|cc0|cc-by|bsd [0-9]"
+                  {} \;
+
+                expected_result: >
+                  At least one LICENSE file contains open license text.
+
+            combination_rules:
+
+              - id: as:open-license-complete
+
+                operator: AND
+
+                checks:
+                  - as:license-file-present
+                  - as:open-license-content
+
+                description: >
+                  Both a LICENSE file must be present and it must
+                  contain recognised open license text.
+
+  - id: as:raw-benchmark-data-availability
+    name: Raw Benchmark Data Availability — Generic
+
+    method_type_tags:
+      - as:benchmarking
+
+    artifact_tags:
+      - as:data
+      - as:executable
+      - as:tool
+
+    rationale: >
+      Benchmark results are only meaningful when the underlying raw
+      measurements are available for verification and reanalysis.
+      Reporting only aggregated statistics or plots prevents detection
+      of anomalies, limits comparability across studies, and makes
+      it impossible to apply alternative analysis methods.
+
+    implementations:
+
+      - id: as:structured-benchmark-data-file
+        name: Structured Raw Data File
+
+        check_level: quality
+
+        method_type_tags:
+          - as:benchmarking
+
+        artifact_tags:
+          - as:data
+          - as:executable
+          - as:tool
+
+        rationale: >
+          Raw measurements in a standard machine-readable format
+          (CSV, TSV, JSON, Parquet) allow automated verification
+          and reanalysis without re-executing potentially expensive
+          benchmarks.
+
+        creation_guidance:
+
+          description: >
+            Export one record per benchmark trial to a machine-readable
+            file. Include a header row or schema description. Name the
+            file clearly (e.g., results.csv, benchmark_raw.json) and
+            place it at or near the artifact root or in a dedicated
+            data/ directory.
+
+          examples:
+            - results.csv with columns benchmark, configuration, trial, runtime_ms
+            - data/raw/benchmark_results.json
+            - results/ directory with one CSV per configuration
+
+        checks_guidance:
+
+          human:
+
+            - id: as:raw-data-human-check
+
+              description: >
+                Verify that raw trial-level measurements (not only
+                summary statistics or plots) are present in a
+                machine-readable format and that columns or fields
+                are documented.
+
+              evidence:
+                - CSV, TSV, JSON, or Parquet file with individual trial measurements
+                - Schema, column description, or codebook in README
+
+          automated:
+
+            checks:
+
+              - id: as:benchmark-data-file-present
+
+                description: >
+                  Check that at least one structured data file is
+                  present in the artifact.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -type f
+                  \( -name "*.csv" -o -name "*.tsv" -o -name "*.json"
+                  -o -name "*.parquet" -o -name "*.feather" \)
+
+                expected_result: >
+                  At least one structured data file is found.
+
+      - id: as:benchmark-execution-scripts
+        name: Benchmark Execution Scripts
+
+        check_level: quality
+
+        method_type_tags:
+          - as:benchmarking
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+
+        rationale: >
+          Scripts that produced the benchmark results allow evaluators
+          to verify that measurements were collected correctly and to
+          re-run experiments on different hardware for comparison.
+
+        creation_guidance:
+
+          description: >
+            Include all scripts used to execute benchmarks. Provide a
+            clear entry point (e.g., run_benchmarks.sh, a Makefile
+            target, or a single Python script) and document any
+            required environment variables, input parameters, or
+            expected runtime.
+
+          examples:
+            - run_benchmarks.sh
+            - benchmark/run.py
+            - Makefile with a "bench" or "benchmark" target
+            - scripts/run_all.sh invoking individual benchmark scripts
+
+        checks_guidance:
+
+          human:
+
+            - id: as:benchmark-scripts-human-check
+
+              description: >
+                Verify that scripts for running benchmarks are present,
+                that a clear entry point is documented, and that the
+                README explains how to invoke them and what output
+                to expect.
+
+              evidence:
+                - Shell script, Python script, or Makefile for running benchmarks
+                - README section describing benchmark execution
+
+          automated:
+
+            checks:
+
+              - id: as:benchmark-script-present
+
+                description: >
+                  Check that at least one benchmark execution script
+                  or Makefile is present in the artifact.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -type f
+                  \( -name "run_benchmark*" -o -name "benchmark*"
+                  -o -name "run_experiments*" -o -name "run_eval*"
+                  -o -name "Makefile" \)
+
+                expected_result: >
+                  At least one matching file is found.
