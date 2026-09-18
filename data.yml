@@ -191,7 +191,7 @@ principles:
   - id: as:hardware-disclosure
     name: Hardware Environment Disclosure
 
-    study_tags:
+    method_type_tags:
       - as:benchmarking
       - as:artifact-evaluation
 
@@ -213,7 +213,7 @@ principles:
       - id: as:system-introspection-dump
         name: Raw System Introspection Dump
 
-        study_tags:
+        method_type_tags:
           - as:benchmarking
 
         artifact_tags:
