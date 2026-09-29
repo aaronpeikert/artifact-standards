@@ -534,3 +534,92 @@ principles:
                   "$artifact_url" =~ ^https://(softwareheritage\.org|zenodo\.org|figshare\.com)(/|$)
                 expected_result: >
                   Exit code 0.
+
+  - id: as:reproducible-results
+    name: Reproducible Experimental Results
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+
+    rationale: >
+      Ensure experimental claims from a paper can be reproducible through the artifact.
+
+    implementations:
+      - id: as:claim-reproduction
+        name: Experimental Claim Reproduction
+        check_level: hygiene
+
+        rationale: >
+          Include a list of claims supported by the artifact, and how they are
+          supported. Similarly for unsupported claims.
+
+        creation_guidance:
+          description: >
+            Authors should list the paper's experimental claims and identify
+            which claims the artifact supports, how it supports them, and which
+            claims are not supported.
+
+        checks_guidance:
+          human:
+            - id: as:claim-reproduction-human-check
+              description: >
+                Verify that the artifact documents the paper's experimental
+                claims and explains which are supported or unsupported.
+              evidence:
+                - Claim-to-artifact mapping
+                - Explanation of unsupported claims
+
+      - id: as:push-button-evaluation
+        name: Push-button evaluation
+        check_level: quality # hygiene eventually?
+
+        rationale: >
+          Ideally, the whole evaluation can be run through a single script,
+          which performs the computation and generates the relevant
+          figures/experimental data presented in the paper. The evaluation
+          should either display progress messages or expected duration should be
+          provided. This fully automated approach may be a bit more costly to
+          setup, but you won’t have any copy/pasting issues for your paper, and
+          regenerating figures from new data is much faster.
+
+        creation_guidance:
+          description: >
+            Authors should provide a single script that runs the evaluation
+            and generates the figures or experimental data reported in the
+            paper, with progress messages or an expected duration.
+
+        checks_guidance:
+          human:
+            - id: as:push-button-evaluation-human-check
+              description: >
+                Run the provided evaluation script and verify that it produces
+                the reported figures or experimental data.
+              evidence:
+                - Evaluation script
+                - Generated figures or experimental data
+
+      - id: as:scaled-down-evaluation
+        name: Scaled down version for larger evaluation
+        check_level: hygiene
+
+        rationale: >
+          If the artifact takes more than one day to run on conventional
+          hardware, we recommend additionally providing a reduced input set to
+          only partially reproduce your results in a shorter time.
+
+        creation_guidance:
+          description: >
+            Authors whose full evaluation takes more than one day should
+            provide a reduced input set that allows representative results
+            to be reproduced more quickly.
+
+        checks_guidance:
+          human:
+            - id: as:scaled-down-evaluation-human-check
+              description: >
+                Verify that a reduced input set is provided and can be used
+                to run a shortened evaluation.
+              evidence:
+                - Reduced input set
+                - Instructions or script for running the shortened evaluation
