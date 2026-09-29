@@ -534,3 +534,44 @@ principles:
                   "$artifact_url" =~ ^https://(softwareheritage\.org|zenodo\.org|figshare\.com)(/|$)
                 expected_result: >
                   Exit code 0.
+
+  - id: as:reproducible-results
+    name: Reproducible Experimental Results
+
+    artifacts_tags:
+      - as:executable
+      - as:tool
+
+    rationale: >
+      Ensure experimental claims from a paper can be reproducible through the artifact.
+
+    implementations:
+      - id:
+        name: Experimental Claim Reproduction
+        check_level: hygiene
+
+        rationale: >
+          Include a list of claims supported by the artifact, and how they are
+          supported. Similarly for unsupported claims.
+
+      - id:
+        name: Push-button evaluation
+        check_level: quality # hygiene eventually?
+
+        rationale: >
+          Ideally, the whole evaluation can be run through a single script,
+          which performs the computation and generates the relevant
+          figures/experimental data presented in the paper. The evaluation
+          should either display progress messages or expected duration should be
+          provided. This fully automated approach may be a bit more costly to
+          setup, but you won’t have any copy/pasting issues for your paper, and
+          regenerating figures from new data is much faster.
+
+      - id:
+        name: Scaled down version for larger evaluation
+        check_level: hygiene
+
+        rationale: >
+          If the artifact takes more than one day to run on conventional
+          hardware, we recommend additionally providing a reduced input set to
+          only partially reproduce your results in a shorter time.
