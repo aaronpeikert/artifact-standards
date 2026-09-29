@@ -298,6 +298,20 @@ principles:
                   a supported container build definition or a supported
                   OVF/OVA virtual machine image is present.
 
+      - id: as:smoke-test
+        name: Installation Smoke Tests
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Smoke tests ensuring the artifact seems to run properly one someone
+          else's computer is a good sanity check.
+
   - id: as:hardware-disclosure
     name: Hardware Environment Disclosure
 
