@@ -534,3 +534,290 @@ principles:
                   "$artifact_url" =~ ^https://(softwareheritage\.org|zenodo\.org|figshare\.com)(/|$)
                 expected_result: >
                   Exit code 0.
+
+  - id: as:data-provenance
+    name: Data Provenance
+
+    method_type_tags:
+      - as:repository-mining
+      - as:data-science
+
+    artifact_tags:
+      - as:data
+
+    rationale: >
+      Research data often comes from external sources that may evolve,
+      change, or become inaccessible over time. Documenting the
+      provenance of research data allows researchers to identify its
+      origin and understand the circumstances under which it was
+      obtained, which supports transparency, reuse, and reproducibility.
+
+    implementations:
+
+      - id: as:data-source-identification
+        name: Data Source Identification
+
+        check_level: hygiene
+
+        method_type_tags:
+          - as:repository-mining
+
+        artifact_tags:
+          - as:data
+
+        rationale: >
+          Naming the original sources, with stable identifiers and access
+          locations, lets others locate the data the study is based on.
+
+        creation_guidance:
+
+          description: >
+            Authors should list every original data source in a
+            `provenance.yml` at the artifact root, with a name, an
+            identifier, and a URL or other access location for each.
+
+          examples:
+            - GitHub repository (owner/name and URL)
+            - Dataset DOI (e.g., Zenodo)
+            - Public API endpoint
+            - Mailing list or issue tracker URL
+
+        checks_guidance:
+
+          human:
+
+            - id: as:data-source-human-check
+
+              description: >
+                Verify that every data source used in the study is listed
+                with a name, an identifier, and a resolvable access
+                location.
+
+              evidence:
+                - provenance.yml
+                - README or data description
+
+          automated:
+
+            checks:
+
+              - id: as:provenance-file-present
+
+                description: >
+                  Verify that a provenance manifest is present
+                  in the artifact package.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                command: >
+                  test -f "${artifact_root}/provenance.yml"
+
+                expected_result: >
+                  Exit code 0.
+
+            combination_rules:
+
+              - id: as:data-source-identification-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:provenance-file-present
+
+                description: >
+                  The identification requirement is satisfied when a
+                  provenance manifest is present. Whether every source
+                  has a name, identifier, and access location is a
+                  human check — presence is checkable, semantic
+                  completeness is not.
+
+      - id: as:data-source-version-identification
+        name: Data Source Version Identification
+
+        check_level: hygiene
+
+        method_type_tags:
+          - as:repository-mining
+
+        artifact_tags:
+          - as:data
+
+        rationale: >
+          Sources change after collection. An immutable version
+          identifier, or a retrieval timestamp where none exists, pins
+          down which state of the source the study used.
+
+        creation_guidance:
+
+          description: >
+            For each source in `provenance.yml`, authors should record an
+            immutable identifier of the state used. If the source has no
+            such identifier (e.g., a live API), they should record the
+            retrieval date and time in ISO 8601 format instead.
+
+          examples:
+            - Git commit SHA or tag
+            - Dataset release or DOI version
+            - Software Heritage SWHID
+            - Retrieval timestamp (2026-03-14T09:30:00Z)
+
+        checks_guidance:
+
+          human:
+
+            - id: as:data-source-version-human-check
+
+              description: >
+                Verify that each data source is associated with an immutable
+                version identifier or retrieval timestamp.
+
+              evidence:
+                - provenance.yml
+                - README or data description
+
+          automated:
+
+            checks:
+
+              - id: as:data-source-version-file-present
+
+                description: >
+                  Verify that a provenance manifest is present
+                  in the artifact package.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                command: >
+                  test -f "${artifact_root}/provenance.yml"
+
+                expected_result: >
+                  Exit code 0.
+
+            combination_rules:
+
+              - id: as:data-source-version-identification-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:data-source-version-file-present
+
+                description: >
+                  The version requirement is satisfied when a
+                  provenance manifest is present. Whether each source
+                  has an immutable version identifier or retrieval
+                  timestamp is a human check — presence is checkable,
+                  semantic completeness is not.
+
+      - id: as:data-acquisition-metadata
+        name: Data Acquisition Metadata
+
+        check_level: quality
+
+        method_type_tags:
+          - as:repository-mining
+
+        artifact_tags:
+          - as:data
+
+        rationale: >
+          Mined data is produced by a pipeline of retrieval scripts.
+          Recording the scripts, their order, their configuration, and
+          the raw outputs they produced makes the retrieval repeatable.
+
+        creation_guidance:
+
+          description: >
+            Authors should document the retrieval pipeline: the scripts
+            used, the order in which they were run, the configuration
+            options chosen, and the resulting raw data files.
+            This can be part of `provenance.yml` or a
+            referenced `ACQUISITION.md`.
+
+          examples:
+            - Ordered list of mining scripts with their CLI arguments
+            - Configuration files used for retrieval
+            - Raw data files
+
+        checks_guidance:
+
+          human:
+
+            - id: as:acquisition-human-check
+
+              description: >
+                Verify that the retrieval scripts, their execution order,
+                and their configuration are documented and that the raw
+                output files can be matched to them.
+
+              evidence:
+                - provenance.yml
+                - ACQUISITION.md
+                - Retrieval scripts and configuration files
+                - Raw data files
+
+          automated:
+
+            checks:
+
+              - id: as:acquisition-file-present
+
+                description: >
+                  Verify that an acquisition documentation file is
+                  present in the artifact package.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory containing the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+                    examples:
+                      - "."
+                      - "./artifact"
+
+                command: >
+                  find "${artifact_root}" -maxdepth 2 -type f
+                  \( -iname "provenance.yml" -o -iname "ACQUISITION.md" \)
+
+                expected_result: >
+                  At least one matching file is found.
+
+            combination_rules:
+
+              - id: as:data-acquisition-metadata-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:acquisition-file-present
+
+                description: >
+                  The acquisition requirement is satisfied when
+                  `provenance.yml` or `ACQUISITION.md` is present.
+                  Whether scripts, order, configuration, and raw
+                  outputs are documented is a human check — presence
+                  is checkable, semantic completeness is not.
+ 
