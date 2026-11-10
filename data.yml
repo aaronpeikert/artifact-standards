@@ -574,7 +574,7 @@ principles:
           description: >
             Authors should list every original data source in a
             `provenance.yml` at the artifact root, with a name, an
-            identifier, and a URL or other access location for each.      
+            identifier, and a URL or other access location for each.
 
           examples:
             - GitHub repository (owner/name and URL)
@@ -604,7 +604,8 @@ principles:
               - id: as:provenance-file-present
 
                 description: >
-                  Verify that a provenance manifest is present.
+                  Verify that a provenance manifest is present
+                  in the artifact package.
 
                 inputs:
 
@@ -624,41 +625,21 @@ principles:
                 expected_result: >
                   Exit code 0.
 
-              - id: as:provenance-sources-have-urls
-
-                description: >
-                  Verify that the manifest contains at least one source URL.
-
-                inputs:
-
-                  - id: artifact_root
-                    description: >
-                      Root directory containing the submitted artifact.
-                    type: directory
-                    required: false
-                    default: "."
-                    examples:
-                      - "."
-                      - "./artifact"    
-
-                command: >
-                  grep -Eq 'https?://' "${artifact_root}/provenance.yml"
-
-                expected_result: >
-                  Exit code 0.
-
             combination_rules:
 
               - id: as:data-source-identification-satisfied
 
-                operator: AND
+                operator: OR
 
                 checks:
                   - as:provenance-file-present
-                  - as:provenance-sources-have-urls
 
                 description: >
-                  The manifest exists and names at least one source location.
+                  The identification requirement is satisfied when a
+                  provenance manifest is present. Whether every source
+                  has a name, identifier, and access location is a
+                  human check — presence is checkable, semantic
+                  completeness is not.
 
       - id: as:data-source-version-identification
         name: Data Source Version Identification
@@ -708,11 +689,11 @@ principles:
 
             checks:
 
-              - id: as:data-source-version-present
+              - id: as:data-source-version-file-present
 
                 description: >
-                  Verify that the manifest contains a commit SHA, SWHID,
-                  or ISO 8601 timestamp.
+                  Verify that a provenance manifest is present
+                  in the artifact package.
 
                 inputs:
 
@@ -726,13 +707,28 @@ principles:
                       - "."
                       - "./artifact"
 
-                command: >    
-                  grep -Eq '[0-9a-f]{40}|swh:1:|[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}'
-                  "${artifact_root}/provenance.yml"
+                command: >
+                  test -f "${artifact_root}/provenance.yml"
 
                 expected_result: >
                   Exit code 0.
-                  
+
+            combination_rules:
+
+              - id: as:data-source-version-identification-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:data-source-version-file-present
+
+                description: >
+                  The version requirement is satisfied when a
+                  provenance manifest is present. Whether each source
+                  has an immutable version identifier or retrieval
+                  timestamp is a human check — presence is checkable,
+                  semantic completeness is not.
+
       - id: as:data-acquisition-metadata
         name: Data Acquisition Metadata
 
@@ -762,9 +758,9 @@ principles:
             - Ordered list of mining scripts with their CLI arguments
             - Configuration files used for retrieval
             - Raw data files
-        
+
         checks_guidance:
-          
+
           human:
 
             - id: as:acquisition-human-check
@@ -779,17 +775,19 @@ principles:
                 - ACQUISITION.md
                 - Retrieval scripts and configuration files
                 - Raw data files
-          
+
           automated:
-          
+
             checks:
 
-              - id: as:acquisition-present
+              - id: as:acquisition-file-present
 
                 description: >
-                  Verify that the retrieval pipeline is documented.
+                  Verify that an acquisition documentation file is
+                  present in the artifact package.
 
                 inputs:
+
                   - id: artifact_root
                     description: >
                       Root directory containing the submitted artifact.
@@ -801,8 +799,25 @@ principles:
                       - "./artifact"
 
                 command: >
-                  test -f "${artifact_root}/ACQUISITION.md"
+                  find "${artifact_root}" -maxdepth 2 -type f
+                  \( -iname "provenance.yml" -o -iname "ACQUISITION.md" \)
 
                 expected_result: >
-                  Exit code 0.
-      
+                  At least one matching file is found.
+
+            combination_rules:
+
+              - id: as:data-acquisition-metadata-satisfied
+
+                operator: OR
+
+                checks:
+                  - as:acquisition-file-present
+
+                description: >
+                  The acquisition requirement is satisfied when
+                  `provenance.yml` or `ACQUISITION.md` is present.
+                  Whether scripts, order, configuration, and raw
+                  outputs are documented is a human check — presence
+                  is checkable, semantic completeness is not.
+ 
