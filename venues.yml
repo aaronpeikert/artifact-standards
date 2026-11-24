@@ -3,7 +3,216 @@ venues:
   - id: as:ase-2026
     name: ASE 2026
     type: conference
+    url: https://conf.researchr.org/track/ase-2026/ase-2026-artifact-evaluation
+    badging_policy: https://www.acm.org/publications/policies/artifact-review-and-badging-current
+
+    description: >
+      Artifact evaluation for accepted papers of the Research, Industry
+      Showcase, NIER, and Tool Demonstration tracks of ASE 2026 (Munich,
+      12–16 October 2026). Single-anonymous review with three reviewers per
+      artifact. Badges follow ACM Artifact Review and Badging v1.1; the
+      Results Validated badges (Reproduced, Replicated) are not awarded.
+
+    eligible_artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+      - as:proof
+      - as:external-service
+
+    # Required for every submission, whichever badges are applied for.
     required_standards:
 
-      - standard: as:container-or-vm
-        display_name: Container or VM — ASE 2026
+      - standard: as:readme-getting-started
+        display_name: README with Getting Started guide (≤ 30 min) — ASE 2026
+        note: >
+          The README has a Getting Started part (description, installation,
+          smoke test with expected output) and a Step-by-Step part. Plain
+          text, Markdown, or PDF. Artifacts whose installation takes
+          reviewers more than 30 minutes are unlikely to be accepted.
+        parameters:
+          - name: getting_started_minutes
+            value: "30"
+            description: Time budget for completing the Getting Started guide.
+
+      - standard: as:requirements-file
+        display_name: REQUIREMENTS file — ASE 2026
+        note: >
+          States architecture, hardware, and software requirements. Specific
+          hardware (e.g., GPUs, particular CPU models) must also be declared
+          in the submission form.
+
+      - standard: as:status-file
+        display_name: STATUS file — ASE 2026
+
+      - standard: as:license-file
+        display_name: LICENSE file — ASE 2026
+        note: >
+          Open-source license recommended for executable artifacts, a data
+          license for non-executable ones.
+
+      - standard: as:artifact-abstract
+        display_name: Artifact abstract (≤ 2 pages) — ASE 2026
+        parameters:
+          - name: max_pages
+            value: "2"
+            description: Page limit of the artifact abstract.
+
+      - standard: as:long-term-archival
+        display_name: Archival repository (no GitHub) — ASE 2026
+        note: >
+          All artifacts must be made available via an archival repository
+          such as Software Heritage, Zenodo, or FigShare. GitHub, Dropbox,
+          Google Drive, and personal websites do not qualify.
+        parameters:
+          - name: allowed_archives
+            value: "^https://(doi\\.org/10\\.5281/zenodo\\.|zenodo\\.org/|archive\\.softwareheritage\\.org/|(www\\.)?figshare\\.com/|doi\\.org/10\\.6084/m9\\.figshare\\.|datadryad\\.org/|doi\\.org/10\\.5061/dryad\\.)"
+            description: Archives named in the call (Software Heritage, Zenodo, FigShare, Dryad).
+
+      - standard: as:persistent-identifier
+        display_name: DOI — ASE 2026
+        note: >
+          Obtain a DOI; citing it in the paper's data availability statement
+          is recommended.
+
+    badges:
+
+      - id: as:ase-2026-available
+        name: Artifacts Available
+        policy_uri: https://www.acm.org/publications/policies/artifact-review-and-badging-current
+        description: >
+          Author-created artifacts relevant to the paper are placed on a
+          publicly accessible archival repository with a declared plan for
+          permanent accessibility, and a DOI is provided.
+        required_standards:
+
+          - standard: as:long-term-archival
+
+          - standard: as:persistent-identifier
+
+          - standard: as:license-file
+            note: >
+              For this badge, the license must ensure public availability
+              of the artifact.
+
+      - id: as:ase-2026-functional
+        name: Artifacts Evaluated — Functional
+        policy_uri: https://www.acm.org/publications/policies/artifact-review-and-badging-current
+        description: >
+          The artifact is documented, consistent, complete, exercisable, and
+          includes appropriate evidence of verification and validation.
+        required_standards:
+
+          - standard: as:container-or-vm
+            display_name: Docker/Podman or OVF/OVA image — ASE 2026
+            applies_to_artifact_tags:
+              - as:executable
+            note: >
+              Other formats require prior approval by the AEC chairs.
+
+          - standard: as:smoke-test
+            applies_to_artifact_tags:
+              - as:executable
+
+          - standard: as:claim-reproduction
+            display_name: Step-by-step instructions with supported/unsupported claims — ASE 2026
+            note: >
+              Second part of the README. States which claims of the paper the
+              artifact supports and how, and which it does not support and why.
+              For software, explains how to reproduce the paper's tables and
+              figures.
+
+          - standard: as:scaled-down-evaluation
+            display_name: Reduced-scope run (≤ 1 day) — ASE 2026
+            applies_to_artifact_tags:
+              - as:executable
+            note: >
+              Experiments that run longer must offer a reduced scope that can
+              be validated in one day or less, with instructions for both the
+              full and the reduced scope.
+            parameters:
+              - name: max_reduced_runtime_hours
+                value: "24"
+                description: Upper bound for the reduced-scope evaluation.
+
+          - standard: as:self-contained
+            check_level: quality
+            applies_to_artifact_tags:
+              - as:executable
+            note: >
+              The call asks authors to avoid downloading content over the
+              internet during experiments or tests (a recommendation, not a
+              hard requirement).
+
+          - standard: as:evaluator-service-credentials
+            display_name: Rate-limited API keys via submission form — ASE 2026
+            applies_to_artifact_tags:
+              - as:external-service
+            note: >
+              Commercial services (e.g., closed AI models) must stay
+              accessible for the whole review period without compromising
+              reviewers' anonymity. API keys go into the submission form,
+              visible only to the artifact's reviewers and the chairs.
+
+          - standard: as:dataset-description
+            applies_to_artifact_tags:
+              - as:data
+            note: >
+              Context, provenance, ethical and legal statements, storage;
+              features (e.g., columns) and schema; usage scenarios.
+
+          - standard: as:open-file-formats
+            applies_to_artifact_tags:
+              - as:data
+            note: >
+              Non-executable artifacts are a single, optionally compressed
+              package (tar, zip, tar.gz) with instructions and the tools
+              needed to open the files.
+
+          - standard: as:proof-to-paper-mapping
+            applies_to_artifact_tags:
+              - as:proof
+            note: >
+              Follow https://proofartifacts.github.io/guidelines/.
+
+          - standard: as:system-introspection-dump
+            check_level: optional
+            applies_to_artifact_tags:
+              - as:executable
+            note: >
+              Not required by the call; recommended for performance-sensitive
+              results in addition to declaring special hardware in the
+              submission form.
+
+      - id: as:ase-2026-reusable
+        name: Artifacts Evaluated — Reusable
+        policy_uri: https://www.acm.org/publications/policies/artifact-review-and-badging-current
+        description: >
+          Significantly exceeds minimal functionality: meets all Functional
+          criteria and is very carefully documented and well structured, to
+          the extent that reuse and repurposing are facilitated.
+        includes:
+          - as:ase-2026-functional
+        required_standards:
+
+          - standard: as:reuse-documentation
+            check_level: hygiene
+            note: >
+              The call encourages explaining how to run the artifact on
+              experiments beyond the paper and documenting the code or data
+              layout; for this badge these are expected.
+
+          - standard: as:push-button-evaluation
+            check_level: quality
+            applies_to_artifact_tags:
+              - as:executable
+            note: >
+              Long-running experiments should display progress messages.
+
+      - id: as:ase-2026-distinguished
+        name: Distinguished Artifact
+        kind: award
+        description: >
+          Awarded to artifacts that go beyond expectations of quality,
+          selected based on review scores and AEC feedback.

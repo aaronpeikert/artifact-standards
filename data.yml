@@ -151,6 +151,17 @@ artifact_tags:
     description: >
       A dataset or other research data artifact.
 
+  - id: as:proof
+    name: Proof
+    description: >
+      A machine-checkable proof or mechanized formalization.
+
+  - id: as:external-service
+    name: External Service
+    description: >
+      An artifact that depends on a commercial or otherwise externally
+      hosted service at run time (e.g., a closed LLM accessed via an API).
+
 
 principles:
 
@@ -535,7 +546,7 @@ principles:
 
                 description: >
                   The disclosure requirement is satisfied when a
-                  hardware description file is present. `as:hardware-json-valid`
+                  hardware description file is present. `as:hardware-json-well-formed`
                   is an additional quality check on well-formedness and
                   content, not required for the base requirement to
                   pass — this mirrors the ad hoc nature of the
@@ -547,15 +558,18 @@ principles:
 
     method_type_tags:
       - as:benchmarking
-      - as:artifact-evaluation
 
     artifact_tags:
       - as:executable
       - as:tool
       - as:prototype
+      - as:data
+      - as:proof
 
     rationale: >
-      Ensure long-term availability of your artifact
+      Ensure long-term availability of your artifact, so that readers can
+      access exactly the version that supports the paper long after
+      publication.
 
     implementations:
 
@@ -564,30 +578,49 @@ principles:
 
         check_level: hygiene
 
-        method_type_tags:
-          - as:artifact-evaluation
-
         artifact_tags:
           - as:executable
           - as:tool
           - as:prototype
+          - as:data
+          - as:proof
 
         rationale: >
           Artifacts hosted on institutional pages or commercial cloud services
           will disappear at some point, as observed by [Collberg and Proebsting
-          (2016)](https://doi.org/10.1145/2812803).
+          (2016)](https://doi.org/10.1145/2812803). Code-hosting platforms
+          such as GitHub, file-sharing services such as Dropbox or Google
+          Drive, and personal websites do not guarantee long-term archival.
 
         creation_guidance:
 
           description: >
-            Authors must use a long-term archival service for their artifacts.
+            Authors must deposit their artifacts in a long-term archival
+            service with a declared plan for permanent accessibility. A link
+            to a code-hosting platform (e.g., GitHub) may complement, but not
+            replace, the archived copy.
 
           examples:
             - Software Heritage (for software repositories)
             - Zenodo
             - FigShare
+            - Dryad
 
         checks_guidance:
+
+          human:
+
+            - id: as:long-term-archival-human-check
+
+              description: >
+                Verify that the artifact link points to a long-term archival
+                service (not a code-hosting platform, file-sharing service, or
+                personal website) and that the archived content matches the
+                submitted artifact.
+
+              evidence:
+                - Artifact URL or DOI
+                - Archived record landing page
 
           automated:
 
@@ -608,9 +641,88 @@ principles:
                     required: true
                     examples:
                       - "https://zenodo.org/records/14677860"
+                      - "https://doi.org/10.5281/zenodo.14677860"
+
+                  - id: allowed_archives
+                    description: >
+                      Extended regular expression of accepted archive URLs.
+                    type: string
+                    required: false
+                    default: "^https://(doi\\.org/10\\.5281/zenodo\\.|zenodo\\.org/|archive\\.softwareheritage\\.org/|(www\\.)?figshare\\.com/|doi\\.org/10\\.6084/m9\\.figshare\\.|datadryad\\.org/|doi\\.org/10\\.5061/dryad\\.)"
 
                 command: >
-                  "$artifact_url" =~ ^https://(softwareheritage\.org|zenodo\.org|figshare\.com)(/|$)
+                  [[ "${artifact_url}" =~ ${allowed_archives} ]]
+                expected_result: >
+                  Exit code 0.
+
+      - id: as:persistent-identifier
+        name: Persistent Identifier (DOI)
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A persistent identifier such as a DOI resolves to the archived
+          artifact even if the hosting URL changes, and lets the paper cite
+          the exact version that was evaluated (e.g., in a data availability
+          statement).
+
+        creation_guidance:
+
+          description: >
+            Authors should obtain a DOI for the archived version of the
+            artifact (archives such as Zenodo, FigShare, or Dryad mint one on
+            publication) and reference it in the paper, ideally in a data
+            availability statement. The DOI should identify a specific
+            version, not only a concept record.
+
+          examples:
+            - Zenodo version DOI (10.5281/zenodo.NNNNNNN)
+            - Software Heritage identifier (SWHID) in addition to a DOI
+            - Data availability statement citing the DOI
+
+        checks_guidance:
+
+          human:
+
+            - id: as:persistent-identifier-human-check
+
+              description: >
+                Verify that the artifact has a DOI, that it resolves to the
+                archived artifact, and that the paper references it.
+
+              evidence:
+                - DOI
+                - Paper's data availability statement
+
+          automated:
+
+            checks:
+
+              - id: as:doi-resolves
+
+                description: >
+                  Verify that the DOI resolves via doi.org.
+
+                inputs:
+
+                  - id: doi
+                    description: >
+                      DOI of the archived artifact, without the resolver prefix.
+                    type: string
+                    required: true
+                    examples:
+                      - "10.5281/zenodo.14677860"
+
+                command: >
+                  curl -fsIL -o /dev/null "https://doi.org/${doi}"
+
                 expected_result: >
                   Exit code 0.
 
@@ -702,3 +814,680 @@ principles:
               evidence:
                 - Reduced input set
                 - Instructions or script for running the shortened evaluation
+
+  - id: as:artifact-documentation
+    name: Artifact Documentation — Generic
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+      - as:proof
+
+    rationale: >
+      Evaluators and future users meet the artifact without the authors'
+      context. Documentation that separates a quick first contact from the
+      full walkthrough lets them confirm early that the artifact works and
+      then find their way to every claim it supports.
+
+    implementations:
+
+      - id: as:readme-getting-started
+        name: README with Getting Started Guide
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A short, bounded first step (describe, install, smoke-test) surfaces
+          setup problems early, when they are still cheap to fix, and tells
+          evaluators whether the rest of the evaluation is worth attempting.
+
+        creation_guidance:
+
+          description: >
+            Provide a README (plain text, Markdown, or PDF) at the artifact
+            root whose first part is a Getting Started guide: what the
+            artifact is, installation instructions (if any), and a smoke test
+            with its expected output. An evaluator should be able to complete
+            the Getting Started guide within the venue's time budget
+            (parameter `getting_started_minutes`). Its second part gives the
+            step-by-step instructions for the paper's experiments (see
+            `as:claim-reproduction`).
+
+          examples:
+            - README.md with sections "Getting Started" and "Step-by-Step Instructions"
+            - Smoke test such as `docker run artifact ./smoke.sh` followed by the expected console output
+
+        checks_guidance:
+
+          human:
+
+            - id: as:readme-getting-started-human-check
+
+              description: >
+                Follow the Getting Started guide on a fresh machine and verify
+                that it describes the artifact, that installation succeeds,
+                and that the smoke test produces the documented output within
+                the time budget.
+
+              evidence:
+                - README Getting Started section
+                - Smoke test output compared with the documented expected output
+                - Time taken to complete the guide
+
+          automated:
+
+            checks:
+
+              - id: as:readme-present
+
+                description: >
+                  Check that a README file is present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f -iname "README*"
+                  | grep -q .
+
+                expected_result: >
+                  Exit code 0.
+
+      - id: as:reuse-documentation
+        name: Documentation for Reuse and Repurposing
+
+        check_level: quality
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+
+        rationale: >
+          Reproducing the paper's results shows that an artifact works;
+          documentation of its structure and of how to apply it beyond the
+          paper's experiments is what lets others build on it.
+
+        creation_guidance:
+
+          description: >
+            In addition to reproduction instructions, document how to use the
+            artifact on inputs or experiments beyond those in the paper, and
+            describe the layout of the code or data so that others can extend
+            or repurpose it.
+
+          examples:
+            - README section "Using the tool on your own project"
+            - Overview of the source tree and main extension points
+            - API documentation or a data dictionary
+
+        checks_guidance:
+
+          human:
+
+            - id: as:reuse-documentation-human-check
+
+              description: >
+                Verify that the documentation explains how to apply the
+                artifact to new inputs and describes its structure well
+                enough that an evaluator could adapt it, e.g., by running it
+                on an input not used in the paper.
+
+              evidence:
+                - Usage documentation beyond the paper's experiments
+                - Code or data layout documentation
+
+  - id: as:declared-requirements
+    name: Declared Requirements — Generic
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+      - as:proof
+
+    rationale: >
+      Evaluators have to provision a suitable environment before they can
+      start. Declaring hardware and software requirements up front lets them
+      choose a machine, spot unmet needs such as GPUs or special peripherals,
+      and avoid failures that have nothing to do with the artifact.
+
+    implementations:
+
+      - id: as:requirements-file
+        name: REQUIREMENTS File
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A dedicated file at a predictable location makes requirements easy
+          to find and to compare against the evaluator's machine.
+
+        creation_guidance:
+
+          description: >
+            Provide a REQUIREMENTS file at the artifact root that states the
+            CPU architecture (e.g., x86-64, ARM) and the hardware and
+            software the artifact needs, such as storage, memory, GPUs or
+            other non-commodity peripherals, the operating system, and the
+            container or VM runtime. Machine-readable dependency
+            specifications are encouraged in addition.
+
+          examples:
+            - "REQUIREMENTS.md: x86-64, 16 GB RAM, 50 GB disk, Docker 24+, optional NVIDIA GPU with 12 GB"
+            - Dockerfile, Pipfile, requirements.txt, renv.lock, or dune-project
+
+        checks_guidance:
+
+          human:
+
+            - id: as:requirements-file-human-check
+
+              description: >
+                Verify that the REQUIREMENTS file names the architecture and
+                the hardware and software needed, and that these match what
+                running the artifact actually required.
+
+              evidence:
+                - REQUIREMENTS file
+                - Machine-readable dependency files
+
+          automated:
+
+            checks:
+
+              - id: as:requirements-file-present
+
+                description: >
+                  Check that a REQUIREMENTS file is present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f -iname "REQUIREMENTS*"
+                  | grep -q .
+
+                expected_result: >
+                  Exit code 0.
+
+  - id: as:licensing
+    name: Licensing — Generic
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+      - as:proof
+
+    rationale: >
+      Without a license, others have no right to use, modify, or redistribute
+      an artifact, even if it is publicly accessible. An explicit license is
+      therefore a precondition for availability and reuse.
+
+    implementations:
+
+      - id: as:license-file
+        name: LICENSE File
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A LICENSE file at the artifact root is the conventional, easily
+          detected place to declare terms of use and distribution rights.
+
+        creation_guidance:
+
+          description: >
+            Provide a LICENSE file at the artifact root stating the terms of
+            use and distribution. Prefer an open-source license for software
+            and an open data license for data. For an availability badge, the
+            license must allow public access to the artifact.
+
+          examples:
+            - MIT, Apache-2.0, or GPL-3.0 for software
+            - CC-BY-4.0 or CC0-1.0 for data
+            - REUSE-compliant LICENSES/ directory for mixed licensing
+
+        checks_guidance:
+
+          human:
+
+            - id: as:license-file-human-check
+
+              description: >
+                Verify that the license covers all parts of the artifact and
+                permits the access and use the claimed badges require.
+
+              evidence:
+                - LICENSE file
+                - Licenses of bundled third-party components
+
+          automated:
+
+            checks:
+
+              - id: as:license-file-present
+
+                description: >
+                  Check that a LICENSE or COPYING file is present at the
+                  artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f
+                  \( -iname "LICENSE*" -o -iname "LICENCE*" -o -iname "COPYING*" \)
+                  | grep -q .
+
+                expected_result: >
+                  Exit code 0.
+
+  - id: as:evaluation-self-description
+    name: Evaluation Self-Description — Generic
+
+    artifact_tags:
+      - as:executable
+      - as:tool
+      - as:prototype
+      - as:data
+      - as:proof
+
+    rationale: >
+      Evaluators decide what to assess based on what the authors claim.
+      Stating the badges sought, with a justification and a short overview of
+      the artifact, aligns expectations before evaluation starts and makes
+      the decision traceable.
+
+    implementations:
+
+      - id: as:status-file
+        name: STATUS File with Badge Claims
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A dedicated file states which badges the authors apply for and why,
+          so evaluators can judge the artifact against those criteria.
+
+        creation_guidance:
+
+          description: >
+            Provide a STATUS file at the artifact root that lists the badges
+            applied for and briefly justifies why the artifact meets the
+            criteria of each.
+
+          examples:
+            - "STATUS.md: Applying for Available and Reusable. Available: archived on Zenodo with DOI ... Reusable: ..."
+
+        checks_guidance:
+
+          human:
+
+            - id: as:status-file-human-check
+
+              description: >
+                Verify that the STATUS file names the badges applied for and
+                that each claim is justified with respect to the venue's
+                badge criteria.
+
+              evidence:
+                - STATUS file
+
+          automated:
+
+            checks:
+
+              - id: as:status-file-present
+
+                description: >
+                  Check that a STATUS file is present at the artifact root.
+
+                inputs:
+
+                  - id: artifact_root
+                    description: >
+                      Root directory of the submitted artifact.
+                    type: directory
+                    required: false
+                    default: "."
+
+                command: >
+                  find "${artifact_root}" -maxdepth 1 -type f -iname "STATUS*"
+                  | grep -q .
+
+                expected_result: >
+                  Exit code 0.
+
+      - id: as:artifact-abstract
+        name: Artifact Abstract
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+          - as:data
+          - as:proof
+
+        rationale: >
+          A short, structured overview lets evaluators (and later readers)
+          judge the artifact's purpose, requirements, and provenance without
+          reading the whole package or the paper first.
+
+        creation_guidance:
+
+          description: >
+            Include a short abstract (within the venue's page limit,
+            parameter `max_pages`) covering: the paper title and a link to
+            the paper accessible to evaluators; the artifact's purpose; the
+            badges applied for and why; the technical skills and hardware
+            needed to evaluate it; its provenance (where it can be obtained);
+            and instructions on how to access and use it, including, for
+            datasets, an explanation of the data, its schema, and usage
+            scenarios.
+
+          examples:
+            - ABSTRACT.pdf with the seven sections listed above
+
+        checks_guidance:
+
+          human:
+
+            - id: as:artifact-abstract-human-check
+
+              description: >
+                Verify that the abstract stays within the page limit and
+                covers paper, purpose, badges, required skills and hardware,
+                provenance, and usage instructions.
+
+              evidence:
+                - Artifact abstract
+
+  - id: as:external-service-access
+    name: Access to External Services — Generic
+
+    artifact_tags:
+      - as:external-service
+      - as:executable
+
+    rationale: >
+      Artifacts that call commercial or remotely hosted services (e.g.,
+      closed LLMs) cannot be evaluated, or later reused, unless the service
+      stays reachable. Access arrangements must also not expose evaluators'
+      identities to the authors or leak credentials.
+
+    implementations:
+
+      - id: as:evaluator-service-credentials
+        name: Evaluator Credentials for External Services
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:external-service
+
+        rationale: >
+          Supplying dedicated, limited credentials for the evaluation period
+          keeps the service usable while bounding the authors' cost and risk
+          and keeping evaluators anonymous.
+
+        creation_guidance:
+
+          description: >
+            Keep required external services accessible for the whole
+            evaluation period without requiring evaluators to identify
+            themselves. Provide credentials (e.g., API keys) through the
+            venue's confidential submission channel, never inside the
+            archived artifact, and rate-limit or budget-cap them where
+            possible. Document which results depend on the service, the
+            model or service version used, and, where feasible, cached
+            responses that allow re-running the analysis without the service.
+
+          examples:
+            - Dedicated, spend-capped API key entered in the submission form
+            - Recorded LLM responses (e.g., JSONL) with the model version and date
+
+        checks_guidance:
+
+          human:
+
+            - id: as:evaluator-service-credentials-human-check
+
+              description: >
+                Verify that the external service is reachable with the
+                provided credentials without revealing the evaluator's
+                identity, that no credentials are embedded in the archived
+                artifact, and that the service version is documented.
+
+              evidence:
+                - Credentials supplied via the submission system
+                - Documentation of service dependencies and versions
+                - Cached responses, if provided
+
+  - id: as:dataset-documentation
+    name: Dataset Documentation — Generic
+
+    method_type_tags:
+      - as:repository-mining
+      - as:data-science
+      - as:questionnaire-survey
+      - as:experiment
+      - as:case-study
+      - as:qualitative-survey
+
+    artifact_tags:
+      - as:data
+
+    rationale: >
+      Data cannot be interpreted, trusted, or reused without knowing where it
+      came from, how it was collected, what it contains, and under which
+      ethical and legal conditions it may be used.
+
+    implementations:
+
+      - id: as:dataset-description
+        name: Dataset Description (Datasheet)
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:data
+
+        rationale: >
+          A structured description, in the spirit of datasheets for datasets,
+          answers the questions every data user has before they can use the
+          data responsibly.
+
+        creation_guidance:
+
+          description: >
+            Describe the dataset's context (why and for which study it was
+            created), provenance (sources, collection and processing steps),
+            ethical and legal considerations (consent, ethics approval,
+            anonymization, licenses of the sources), and storage. Document its
+            features and schema (e.g., columns, types, units, codes) and list
+            intended usage scenarios.
+
+          examples:
+            - DATASHEET.md following Gebru et al., "Datasheets for Datasets"
+            - Codebook or data dictionary describing each column
+            - Frictionless Data package (datapackage.json) with a table schema
+
+        checks_guidance:
+
+          human:
+
+            - id: as:dataset-description-human-check
+
+              description: >
+                Verify that the documentation covers context, provenance,
+                ethics and legal aspects, storage, schema, and usage
+                scenarios, and that the schema matches the files provided.
+
+              evidence:
+                - Dataset documentation
+                - Data dictionary or schema
+                - Ethics approval or consent statement, if applicable
+
+  - id: as:accessible-formats
+    name: Accessible File Formats — Generic
+
+    artifact_tags:
+      - as:data
+      - as:executable
+
+    rationale: >
+      Files in proprietary or obscure formats may become unreadable or
+      require paid software. Open, widely supported formats and a single,
+      standard package keep the artifact accessible to evaluators today and
+      to readers in the future.
+
+    implementations:
+
+      - id: as:open-file-formats
+        name: Open, Widely Supported Formats
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:data
+
+        rationale: >
+          Open formats can be read with freely available tools on any
+          platform, and listing the tools needed removes guesswork.
+
+        creation_guidance:
+
+          description: >
+            Package non-executable artifacts as a single, optionally
+            compressed archive in a standard format, store contents in open
+            and widely supported formats, and list the tools needed to open
+            each file type. Avoid closed-source libraries, operating systems,
+            or formats unless they are essential to the research.
+
+          examples:
+            - Archive formats .zip, .tar, .tar.gz
+            - Data formats CSV, JSON, Parquet; documents PDF, ODT, Markdown
+
+        checks_guidance:
+
+          human:
+
+            - id: as:open-file-formats-human-check
+
+              description: >
+                Verify that the artifact is a single standard archive, that
+                its files use open formats or that proprietary formats are
+                justified, and that the tools needed to open them are listed.
+
+              evidence:
+                - Archive file
+                - List of file formats and the tools to open them
+
+  - id: as:proof-correspondence
+    name: Proof–Paper Correspondence — Generic
+
+    artifact_tags:
+      - as:proof
+
+    rationale: >
+      A mechanized proof supports a paper only if readers can tell which
+      formal statements correspond to which definitions and theorems in the
+      paper, and which assumptions remain unproven.
+
+    implementations:
+
+      - id: as:proof-to-paper-mapping
+        name: Mapping from Paper to Mechanized Proof
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:proof
+
+        rationale: >
+          An explicit mapping lets evaluators check proof coverage without
+          reverse-engineering the formalization.
+
+        creation_guidance:
+
+          description: >
+            Map each definition, lemma, and theorem in the paper to its
+            counterpart in the proof development, and list every axiom,
+            admitted lemma, or other unproven assumption, following the
+            community guidelines for proof artifacts.
+
+          examples:
+            - README table "Theorem 3.2 → src/Soundness.v:soundness"
+            - Output of Print Assumptions (Coq/Rocq) or #print axioms (Lean)
+            - https://proofartifacts.github.io/guidelines/
+
+        checks_guidance:
+
+          human:
+
+            - id: as:proof-to-paper-mapping-human-check
+
+              description: >
+                Verify that the mapping covers the paper's formal claims,
+                that the proof checks with the stated prover version, and
+                that all unproven assumptions are disclosed.
+
+              evidence:
+                - Paper-to-proof mapping
+                - Proof checker output
+                - List of axioms and admitted lemmas

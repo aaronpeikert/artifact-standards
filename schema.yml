@@ -415,6 +415,9 @@ classes:
   Venue:
     description: >
       A conference, journal, or other venue that requires specific implementations.
+      A venue can state requirements for every artifact submission
+      (required_standards) and, additionally, per badge or award it offers
+      (badges).
 
     attributes:
 
@@ -431,10 +434,87 @@ classes:
         range: VenueType
         required: true
 
+      url:
+        description: >
+          Link to the venue's call for artifacts or artifact evaluation track.
+        range: uri
+
+      badging_policy:
+        description: >
+          External badging policy the venue's badges are defined against
+          (e.g., ACM Artifact Review and Badging v1.1).
+        range: uri
+
+      description:
+        description: >
+          Short summary of the venue's artifact evaluation scope and process.
+        range: string
+
+      eligible_artifact_tags:
+        description: >
+          Artifact tags the venue explicitly accepts for evaluation.
+        range: uriorcurie
+        multivalued: true
+
       required_standards:
         description: >
-          Implementations (standards) required by this venue, with optional
-          venue-specific display name overrides.
+          Implementations (standards) required for every artifact submitted
+          to this venue, regardless of the badges applied for, with optional
+          venue-specific overrides.
+        range: VenueStandardRef
+        multivalued: true
+        inlined_as_list: true
+
+      badges:
+        description: >
+          Badges or awards offered by the venue, each with the implementations
+          (standards) an artifact must satisfy to receive it.
+        range: Badge
+        multivalued: true
+        inlined_as_list: true
+
+
+  Badge:
+    description: >
+      A badge or award a venue grants to artifacts, defined by the
+      implementations (standards) an artifact must satisfy to receive it.
+
+    attributes:
+
+      id:
+        identifier: true
+        range: uriorcurie
+        required: true
+
+      name:
+        range: string
+        required: true
+
+      kind:
+        range: BadgeKind
+        ifabsent: string(badge)
+
+      description:
+        description: >
+          The venue's criteria for the badge, summarized.
+        range: string
+
+      policy_uri:
+        description: >
+          Link to the external definition of the badge (e.g., the ACM badge).
+        range: uri
+
+      includes:
+        description: >
+          Other badges whose requirements are implied by this badge
+          (e.g., Reusable includes Functional).
+        range: uriorcurie
+        multivalued: true
+
+      required_standards:
+        description: >
+          Implementations (standards) required for this badge, in addition
+          to the venue-wide required_standards and those of included badges.
         range: VenueStandardRef
         multivalued: true
         inlined_as_list: true
@@ -442,8 +522,9 @@ classes:
 
   VenueStandardRef:
     description: >
-      A reference from a venue to a required implementation (standard),
-      optionally overriding the display name for that venue.
+      A reference from a venue (or one of its badges) to a required
+      implementation (standard), optionally overriding the display name,
+      the check level, or check parameters for that venue.
 
     attributes:
 
@@ -456,6 +537,54 @@ classes:
       display_name:
         description: >
           Venue-specific display name shown instead of the generic implementation name.
+        range: string
+
+      check_level:
+        description: >
+          Venue-specific check level, if the venue treats the implementation
+          differently from its generic check level (e.g., "should" instead of
+          "must").
+        range: CheckLevel
+
+      applies_to_artifact_tags:
+        description: >
+          Restricts the requirement to artifacts with these tags (e.g., a
+          container image is only required for executable artifacts).
+        range: uriorcurie
+        multivalued: true
+
+      note:
+        description: >
+          Venue-specific interpretation of the implementation, ideally
+          paraphrasing the venue's call.
+        range: string
+
+      parameters:
+        description: >
+          Venue-specific values for parameters of the implementation, such as
+          time budgets or inputs of automated checks.
+        range: VenueParameter
+        multivalued: true
+        inlined_as_list: true
+
+
+  VenueParameter:
+    description: >
+      A venue-specific value for a parameter of an implementation. When the
+      name matches an input of one of the implementation's automated checks,
+      the value overrides that input's default.
+
+    attributes:
+
+      name:
+        range: string
+        required: true
+
+      value:
+        range: string
+        required: true
+
+      description:
         range: string
 
 
@@ -478,6 +607,19 @@ enums:
         description: >
           Not required for acceptance. Satisfying this standard is encouraged
           but not expected.
+
+
+  BadgeKind:
+    permissible_values:
+
+      badge:
+        description: >
+          A badge awarded to every artifact that meets its criteria.
+
+      award:
+        description: >
+          A selective distinction (e.g., Distinguished Artifact) chosen
+          among the evaluated artifacts.
 
 
   VenueType:
