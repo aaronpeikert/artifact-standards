@@ -298,6 +298,85 @@ principles:
                   a supported container build definition or a supported
                   OVF/OVA virtual machine image is present.
 
+      - id: as:smoke-test
+        name: Installation Smoke Tests
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Smoke tests ensuring the artifact seems to run properly one someone
+          else's computer is a good sanity check.
+
+        creation_guidance:
+
+          description: >
+            Authors should provide a short smoke test that exercises the
+            artifact's basic startup and a representative operation, with
+            instructions for running it after installation.
+
+          examples:
+            - A command that prints the tool's version or help
+            - A minimal example invocation with expected output
+
+        checks_guidance:
+
+          human:
+
+            - id: as:smoke-test-human-check
+
+              description: >
+                Verify that the artifact includes instructions for running
+                a smoke test and that the test completes successfully after
+                following the documented installation steps.
+
+              evidence:
+                - Smoke-test instructions
+                - Test output or logs
+
+      - id: as:self-contained
+        name: Self-contained Artifact
+
+        check_level: hygiene
+
+        artifact_tags:
+          - as:executable
+          - as:tool
+          - as:prototype
+
+        rationale: >
+          Artifacts should be self-contained to ensure long-term preservation. In particular, downloading content over the internet during build, experiments or tests is heavily discouraged.
+
+        creation_guidance:
+
+          description: >
+            Authors should include or otherwise make available all required
+            dependencies and inputs so that installation, builds, experiments,
+            and tests can run without downloading content over the internet.
+
+          examples:
+            - Dependency lockfiles and locally available packages
+            - Scripts that use bundled inputs instead of downloading them
+
+        checks_guidance:
+
+          human:
+
+            - id: as:self-contained-human-check
+
+              description: >
+                Inspect the installation, build, experiment, and test
+                instructions and scripts for network downloads, then verify
+                that these steps can run with network access disabled.
+
+              evidence:
+                - Installation, build, experiment, and test scripts
+                - Logs from running these steps without network access
+
   - id: as:hardware-disclosure
     name: Hardware Environment Disclosure
 
