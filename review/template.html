@@ -1,0 +1,716 @@
+<title>ASE 2026 Call Mapping</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&display=swap">
+<style>
+/* Layout: a traceability ledger. Each row pairs a passage of the call (left,
+   set in serif like the source document) with what the model encodes (right,
+   set in sans/mono like the YAML), with the assessment and reviewer verdicts
+   underneath. */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --sunken: #eaeef0;
+  --line: #d5dde1;
+  --ink: #14212a;
+  --muted: #55646e;
+  --accent: #006699;
+  --accent-soft: #e1eff6;
+
+  --st-faithful: #2e7a4b;      --st-faithful-bg: #e3f2e8;
+  --st-interpreted: #946000;   --st-interpreted-bg: #fbf0d9;
+  --st-divergent: #b23b22;     --st-divergent-bg: #fbe5df;
+  --st-not-modeled: #6a4b9e;   --st-not-modeled-bg: #ece6f6;
+  --st-out-of-scope: #5f6b74;  --st-out-of-scope-bg: #e7ebee;
+
+  --font-display: "Schibsted Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-source: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171c; --surface: #16222a; --sunken: #1d2b34; --line: #2c3c46;
+    --ink: #e3eaee; --muted: #9aabb6; --accent: #5fb4dd; --accent-soft: #173444;
+    --st-faithful: #6fcf95;     --st-faithful-bg: #17342a;
+    --st-interpreted: #e6b450;  --st-interpreted-bg: #3a2e14;
+    --st-divergent: #f08a72;    --st-divergent-bg: #42211a;
+    --st-not-modeled: #b9a0ea;  --st-not-modeled-bg: #2c2442;
+    --st-out-of-scope: #a3b0b9; --st-out-of-scope-bg: #26323a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171c; --surface: #16222a; --sunken: #1d2b34; --line: #2c3c46;
+  --ink: #e3eaee; --muted: #9aabb6; --accent: #5fb4dd; --accent-soft: #173444;
+  --st-faithful: #6fcf95;     --st-faithful-bg: #17342a;
+  --st-interpreted: #e6b450;  --st-interpreted-bg: #3a2e14;
+  --st-divergent: #f08a72;    --st-divergent-bg: #42211a;
+  --st-not-modeled: #b9a0ea;  --st-not-modeled-bg: #2c2442;
+  --st-out-of-scope: #a3b0b9; --st-out-of-scope-bg: #26323a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1180px; margin-inline: auto; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+
+/* Header */
+.masthead { padding-block: 28px 18px; display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.masthead h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: -0.01em; }
+.masthead p { margin: 0; max-width: 72ch; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+
+/* Toolbar */
+.toolbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; display: grid; gap: 10px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.toolbar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tabs { display: flex; gap: 2px; background: var(--sunken); padding: 3px; border-radius: 8px; }
+.tab {
+  font: inherit; font-size: 13px; font-weight: 600; border: 0; background: transparent; color: var(--muted);
+  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.spacer { flex: 1; }
+.filter-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+select, .btn {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 10px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+/* Status chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent;
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.st-faithful { color: var(--st-faithful); background: var(--st-faithful-bg); }
+.st-interpreted { color: var(--st-interpreted); background: var(--st-interpreted-bg); }
+.st-divergent { color: var(--st-divergent); background: var(--st-divergent-bg); }
+.st-not-modeled { color: var(--st-not-modeled); background: var(--st-not-modeled-bg); }
+.st-out-of-scope { color: var(--st-out-of-scope); background: var(--st-out-of-scope-bg); }
+button.chip { font-family: inherit; cursor: pointer; }
+button.chip[aria-pressed="true"] { border-color: currentColor; }
+.chips:has(button[aria-pressed="true"]) button.chip[aria-pressed="false"] { opacity: 0.5; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.count { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+/* Paste panel */
+.paste {
+  margin-top: 12px;
+  background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 12px 14px; display: grid; gap: 8px; font-size: 13.5px;
+}
+.paste p { margin: 0; color: var(--muted); }
+.paste textarea {
+  width: 100%; min-height: 90px; resize: vertical; font: 13px/1.4 var(--font-mono);
+  color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px;
+}
+.paste-status { font-size: 13px; }
+.ok { color: var(--st-faithful); } .warn { color: var(--st-divergent); }
+
+/* Section headers */
+.section-head {
+  margin-top: 28px; padding-bottom: 6px; border-bottom: 2px solid var(--ink);
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.section-head h2 { font-size: 19px; }
+.section-head span { color: var(--muted); font-size: 13px; }
+
+/* Rows */
+.row {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  margin-top: 12px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+.row > * { min-width: 0; }
+.call, .model { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.call { border-right: 1px solid var(--line); background: linear-gradient(var(--surface), var(--surface)); }
+.cell-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.row-id { font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-weight: 400; }
+.quote {
+  font-family: var(--font-source); font-size: 16px; line-height: 1.55; margin: 0;
+  border-left: 3px solid var(--line); padding-left: 12px;
+}
+.summary { margin: 0; }
+.quote + .summary { font-size: 13.5px; color: var(--muted); }
+.anchor { font-size: 13px; color: var(--muted); }
+.anchor em { font-family: var(--font-source); font-size: 14.5px; color: var(--ink); }
+.source-link { font-size: 13px; font-weight: 600; text-decoration: none; }
+.source-link:hover { text-decoration: underline; }
+.missing { color: var(--st-divergent); font-size: 13px; }
+
+.model-empty { color: var(--muted); font-style: italic; font-size: 14px; }
+.entry { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.entry > summary {
+  list-style: none; cursor: pointer; padding: 8px 10px; display: grid; gap: 4px;
+}
+.entry > summary::-webkit-details-marker { display: none; }
+.entry-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.entry-name { font-weight: 600; }
+.entry-curie { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.entry-note { font-size: 13.5px; color: var(--ink); }
+.entry[open] > summary { border-bottom: 1px solid var(--line); }
+.entry-body { padding: 10px; display: grid; gap: 10px; font-size: 13.5px; }
+.entry-body h4 { margin: 0 0 3px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.entry-body ul { margin: 0; padding-left: 18px; }
+.entry-body p { margin: 0; }
+.cmd { display: block; white-space: pre-wrap; word-break: break-all; background: var(--sunken); padding: 6px 8px; border-radius: 4px; margin-top: 3px; }
+.pill {
+  font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 4px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+}
+.pill-level { background: var(--sunken); color: var(--muted); }
+.pill-level.changed { background: var(--st-interpreted-bg); color: var(--st-interpreted); }
+.params { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+.params code { background: var(--sunken); padding: 1px 5px; border-radius: 3px; }
+
+.verdict {
+  grid-column: 1 / -1; border-top: 1px solid var(--line);
+  padding: 12px 16px; display: grid; gap: 10px;
+  background: var(--sunken);
+}
+.verdict-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.verdict p { margin: 0; max-width: 95ch; }
+.assess-label { font-weight: 600; }
+.proposal { border-left: 3px solid var(--accent); padding-left: 10px; }
+
+.review { display: grid; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.review-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.vbtn {
+  font: inherit; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+}
+.vbtn[aria-pressed="true"][data-v="ok"] { background: var(--st-faithful-bg); color: var(--st-faithful); border-color: currentColor; }
+.vbtn[aria-pressed="true"][data-v="change"] { background: var(--st-divergent-bg); color: var(--st-divergent); border-color: currentColor; }
+.vbtn[aria-pressed="true"][data-v="question"] { background: var(--st-interpreted-bg); color: var(--st-interpreted); border-color: currentColor; }
+.vbtn:disabled { cursor: not-allowed; opacity: 0.55; }
+.note-input {
+  flex: 1 1 260px; min-width: 0; font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 9px;
+}
+.saved { font-size: 12px; color: var(--muted); }
+.others { display: grid; gap: 4px; }
+.other { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; }
+.other img { width: 20px; height: 20px; border-radius: 50%; flex: none; margin-top: 1px; }
+.other .who { font-weight: 600; }
+.vtag { font-size: 11.5px; font-weight: 600; padding: 0 6px; border-radius: 4px; }
+.vtag-ok { background: var(--st-faithful-bg); color: var(--st-faithful); }
+.vtag-change { background: var(--st-divergent-bg); color: var(--st-divergent); }
+.vtag-question { background: var(--st-interpreted-bg); color: var(--st-interpreted); }
+.review-off { font-size: 13px; color: var(--muted); }
+
+/* Model → call view */
+.req-table-wrap { overflow-x: auto; margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--sunken); }
+td .entry-curie { display: block; }
+.cite { display: inline-flex; gap: 4px; align-items: center; margin: 0 6px 4px 0; font-size: 12.5px; text-decoration: none; }
+.scope-row td { background: var(--accent-soft); font-weight: 600; font-family: var(--font-display); }
+
+/* Uncovered view */
+.uncovered { margin-top: 14px; display: grid; gap: 8px; }
+.uncovered .quote { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--st-not-modeled); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; }
+.empty-state { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 14px; color: var(--muted); }
+
+.legend { display: grid; gap: 6px; font-size: 13.5px; margin-top: 4px; }
+.legend div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .row { grid-template-columns: 1fr; }
+  .call { border-right: 0; border-bottom: 1px solid var(--line); }
+  .toolbar { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Artifact standards · traceability review</div>
+    <h1 id="title">ASE 2026 Call Mapping</h1>
+    <p>Each row puts one passage of the ASE 2026 Call for Artifacts next to what <code>venues.yml</code> and <code>data.yml</code> encode for it, with an assessment of the translation. Mark each row as faithful, needing a change, or open for discussion; verdicts are shared with everyone who opens this page.</p>
+    <div class="meta" id="meta"></div>
+    <details class="legend-wrap">
+      <summary class="source-link" style="cursor:pointer">What the statuses mean</summary>
+      <div class="legend" id="legend"></div>
+    </details>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <div class="tabs" role="tablist" aria-label="View">
+        <button class="tab" role="tab" id="tab-call" data-view="call" aria-selected="true">Call → model</button>
+        <button class="tab" role="tab" id="tab-model" data-view="model" aria-selected="false">Model → call</button>
+        <button class="tab" role="tab" id="tab-uncovered" data-view="uncovered" aria-selected="false">Uncovered call text</button>
+      </div>
+      <span class="spacer"></span>
+      <label class="filter-label" for="review-filter">Show</label>
+      <select id="review-filter">
+        <option value="all">All rows</option>
+        <option value="mine-open">Not yet reviewed by me</option>
+        <option value="flagged">Flagged by anyone</option>
+      </select>
+      <button class="btn" id="paste-toggle" type="button" aria-expanded="false">Show call text inline</button>
+    </div>
+    <div class="chips" id="status-chips" aria-label="Filter by status"></div>
+  </div>
+  <div class="paste" id="paste-panel" hidden>
+    <p>To see each passage inline and find call text that no row covers, open the <a id="paste-source" href="#">call for artifacts</a>, select the whole Call for Artifacts tab, copy it, and paste it here. It stays in this browser only.</p>
+    <textarea id="paste-input" aria-label="Call for Artifacts text" placeholder="Paste the Call for Artifacts text here"></textarea>
+    <div class="toolbar-row">
+      <span class="paste-status" id="paste-status"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="paste-clear" type="button">Clear</button>
+    </div>
+  </div>
+
+  <main id="view-call"></main>
+  <main id="view-model" hidden></main>
+  <main id="view-uncovered" hidden></main>
+</div>
+
+<script>
+const DATA = /*__REVIEW_DATA__*/null;
+
+const STATUS = {
+  "faithful": { label: "Faithful", text: "The model says what the call says." },
+  "interpreted": { label: "Interpreted", text: "The model resolves an ambiguity or makes a judgment call; check the choice." },
+  "divergent": { label: "Divergent", text: "The model differs from the call in scope, placement, or strength." },
+  "not-modeled": { label: "Not modeled", text: "The call asks for something the model does not encode." },
+  "out-of-scope": { label: "Out of scope", text: "Process or policy text, deliberately not modeled." },
+};
+const VERDICTS = { ok: "Faithful", change: "Needs change", question: "Question" };
+
+const state = {
+  view: "call",
+  statuses: new Set(),
+  reviewFilter: "all",
+  callText: "",
+  me: null,          // viewer id
+  canWrite: false,
+  reviews: {},       // uid -> {rows: {rowId: {v, note, t}}}
+  mine: { rows: {} },
+  profiles: {},
+  reviewReady: false,
+  reviewMessage: "Loading shared verdicts…",
+};
+
+// ── helpers ──────────────────────────────────────────────────────────────
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return n;
+}
+function storage(fn, fallback) { try { return fn(); } catch (e) { return fallback; } }
+const QUOTES = { "‘": "'", "’": "'", "“": '"', "”": '"', " ": " " };
+function normDisplay(s) { return s.replace(/[‘’“” ]/g, c => QUOTES[c]).replace(/\s+/g, " ").trim(); }
+function fragmentEncode(s) {
+  return encodeURIComponent(s).replace(/-/g, "%2D").replace(/,/g, "%2C").replace(/&/g, "%26");
+}
+function sourceLink(anchor) {
+  const [start, end] = anchor;
+  return DATA.source + "#" + (DATA.source_hash || "") + ":~:text=" + fragmentEncode(start) + (end ? "," + fragmentEncode(end) : "");
+}
+
+// ── call text (pasted, per viewer) ───────────────────────────────────────
+let callNorm = "", callLower = "";
+function setCallText(text) {
+  state.callText = text || "";
+  callNorm = normDisplay(state.callText);
+  callLower = callNorm.toLowerCase();
+}
+function locate(anchor) {
+  if (!callLower) return null;
+  const start = normDisplay(anchor[0]).toLowerCase();
+  const s = callLower.indexOf(start);
+  if (s < 0) return null;
+  let e;
+  if (anchor[1]) {
+    const end = normDisplay(anchor[1]).toLowerCase();
+    const f = callLower.indexOf(end, s);
+    if (f < 0) return null;
+    e = f + end.length;
+  } else {
+    const dot = callLower.indexOf(".", s + start.length);
+    e = dot < 0 ? s + start.length : dot + 1;
+  }
+  // extend to the end of the sentence if the anchor stops just short of it
+  const tail = callNorm.slice(e, e + 3);
+  const m = tail.match(/^[)."”']{1,2}/);
+  if (m) e += m[0].length;
+  return { s, e, text: callNorm.slice(s, e) };
+}
+
+// ── rendering: call → model ──────────────────────────────────────────────
+function levelPill(req) {
+  const eff = req.venue_level || req.generic_level;
+  if (!eff) return null;
+  const changed = req.venue_level && req.venue_level !== req.generic_level;
+  return el("span", { class: "pill pill-level" + (changed ? " changed" : ""),
+    title: changed ? `Generic level: ${req.generic_level}; ASE sets ${req.venue_level}` : "Check level" },
+    changed ? `${eff} (generic: ${req.generic_level})` : eff);
+}
+
+function requirementEntry(req, open) {
+  const summary = el("summary", {},
+    el("div", { class: "entry-top" },
+      el("span", { class: "pill" }, req.scope),
+      el("span", { class: "entry-name" }, req.display_name || req.name),
+      levelPill(req),
+      req.applies_to.length ? el("span", { class: "pill pill-level" }, "only: " + req.applies_to.join(", ")) : null),
+    el("span", { class: "entry-curie" }, req.standard + (req.display_name ? " · " + req.name : "")),
+    req.note ? el("span", { class: "entry-note" }, req.note) : null,
+    req.parameters.length ? el("div", { class: "params" }, req.parameters.map(p =>
+      el("span", {}, el("code", {}, p.name + " = " + (p.value.length > 40 ? p.value.slice(0, 40) + "…" : p.value)), p.description ? " " + p.description : ""))) : null);
+  const body = el("div", { class: "entry-body" },
+    el("div", {}, el("h4", { text: "Generic creation guidance (" + req.principle + ")" }), el("p", { text: req.guidance })),
+    req.examples.length ? el("div", {}, el("h4", { text: "Examples" }), el("ul", {}, req.examples.map(x => el("li", { text: x })))) : null,
+    req.human_checks.length ? el("div", {}, el("h4", { text: "Human checks" }), el("ul", {}, req.human_checks.map(x => el("li", { text: x })))) : null,
+    req.automated_checks.length ? el("div", {}, el("h4", { text: "Automated checks" }), el("ul", {}, req.automated_checks.map(c =>
+      el("li", {}, el("span", { class: "entry-curie" }, c.id), " ", c.description, el("code", { class: "cmd" }, c.command))))) : null,
+    req.parameters.some(p => p.value.length > 40) ? el("div", {}, el("h4", { text: "Full parameter values" }),
+      el("ul", {}, req.parameters.map(p => el("li", {}, el("code", { class: "cmd" }, p.name + " = " + p.value))))) : null);
+  const d = el("details", { class: "entry" }, summary, body);
+  if (open) d.open = true;
+  return d;
+}
+
+function modelEntry(m) {
+  if (m.kind === "ref") return requirementEntry(DATA.requirements[m.key]);
+  if (m.kind === "badge") {
+    return el("div", { class: "entry" }, el("div", { style: "padding:8px 10px;display:grid;gap:4px" },
+      el("div", { class: "entry-top" },
+        el("span", { class: "pill" }, m.badge_kind === "award" ? "Award" : "Badge"),
+        el("span", { class: "entry-name" }, m.name),
+        m.includes.length ? el("span", { class: "pill pill-level" }, "includes " + m.includes.join(", ")) : null,
+        el("span", { class: "pill pill-level" }, m.requirement_count + " badge-specific standard" + (m.requirement_count === 1 ? "" : "s"))),
+      el("span", { class: "entry-curie" }, m.key.replace(/^badge:/, "")),
+      m.description ? el("span", { class: "entry-note" }, m.description) : null));
+  }
+  return el("div", { class: "entry" }, el("div", { style: "padding:8px 10px;display:grid;gap:4px" },
+    el("div", { class: "entry-top" }, el("span", { class: "pill" }, "Venue"), el("span", { class: "entry-name" }, m.label)),
+    el("span", { class: "entry-note" }, Array.isArray(m.value) ? m.value.join(", ") : m.value)));
+}
+
+function verdictsFor(rowId) {
+  const out = [];
+  for (const [uid, doc] of Object.entries(state.reviews)) {
+    const r = doc && doc.rows && doc.rows[rowId];
+    if (r && (r.v || r.note)) out.push({ uid, ...r });
+  }
+  return out;
+}
+
+function reviewBlock(row) {
+  const mine = state.mine.rows[row.id] || {};
+  const wrap = el("div", { class: "review", "data-review": row.id });
+  if (!state.reviewReady) {
+    wrap.append(el("div", { class: "review-off", text: state.reviewMessage }));
+    return wrap;
+  }
+  const disabled = !state.canWrite;
+  const controls = el("div", { class: "review-controls" },
+    el("span", { class: "filter-label", text: "Your verdict" }),
+    Object.entries(VERDICTS).map(([v, label]) => el("button", {
+      class: "vbtn", type: "button", "data-v": v, "aria-pressed": String(mine.v === v), disabled,
+      onclick: () => setVerdict(row.id, mine.v === v ? null : v),
+    }, label)),
+    el("input", { class: "note-input", id: "note-" + row.id, type: "text", placeholder: disabled ? "Read-only for you" : "Note (what should change, or your question)",
+      value: mine.note || "", disabled, "aria-label": "Note for " + row.id,
+      onchange: e => setNote(row.id, e.target.value) }));
+  wrap.append(controls);
+  const others = verdictsFor(row.id).filter(o => o.uid !== state.me);
+  if (others.length) {
+    wrap.append(el("div", { class: "others" }, others.map(o => {
+      const p = state.profiles[o.uid] || {};
+      return el("div", { class: "other" },
+        p.avatarUrl ? el("img", { src: p.avatarUrl, alt: "" }) : null,
+        el("div", {},
+          el("span", { class: "who", text: p.name || "Someone" }), " ",
+          o.v ? el("span", { class: "vtag vtag-" + o.v, text: VERDICTS[o.v] }) : null,
+          o.note ? el("span", { text: " " + o.note }) : null));
+    })));
+  }
+  if (!state.canWrite && state.reviewMessage) wrap.append(el("div", { class: "review-off", text: state.reviewMessage }));
+  return wrap;
+}
+
+function rowVisible(row) {
+  if (state.statuses.size && !state.statuses.has(row.status)) return false;
+  if (state.reviewFilter === "mine-open") { const m = state.mine.rows[row.id]; if (m && m.v) return false; }
+  if (state.reviewFilter === "flagged") { if (!verdictsFor(row.id).some(o => o.v === "change" || o.v === "question")) return false; }
+  return true;
+}
+
+function renderRow(row) {
+  const loc = locate(row.anchor);
+  const call = el("div", { class: "call" },
+    el("div", { class: "cell-label" }, el("span", { text: "Call for artifacts" }), el("span", { class: "row-id", text: row.id })),
+    loc ? el("blockquote", { class: "quote", text: loc.text }) : null,
+    state.callText && !loc ? el("div", { class: "missing", text: "This passage was not found in the pasted text. The call may have changed." }) : null,
+    el("p", { class: "summary", text: row.summary }),
+    !loc ? el("div", { class: "anchor" }, "Passage starts with ", el("em", { text: "“" + row.anchor[0] + "…”" })) : null,
+    el("a", { class: "source-link", href: sourceLink(row.anchor), target: "_blank", rel: "noopener" }, "Open this passage in the call ↗"));
+  const model = el("div", { class: "model" },
+    el("div", { class: "cell-label" }, el("span", { text: "What the model encodes" })),
+    row.model.length ? row.model.map(modelEntry) : el("div", { class: "model-empty", text: "Nothing in the model." }));
+  const verdict = el("div", { class: "verdict" },
+    el("div", { class: "verdict-head" }, el("span", { class: "chip st-" + row.status, text: STATUS[row.status].label }),
+      row.assessment ? null : el("span", { class: "saved", text: STATUS[row.status].text })),
+    row.assessment ? el("p", {}, el("span", { class: "assess-label", text: "Assessment. " }), row.assessment) : null,
+    row.proposal ? el("p", { class: "proposal" }, el("span", { class: "assess-label", text: "Proposed change. " }), row.proposal) : null,
+    reviewBlock(row));
+  return el("article", { class: "row", id: "row-" + row.id }, call, model, verdict);
+}
+
+function renderCallView() {
+  const root = document.getElementById("view-call");
+  root.textContent = "";
+  let section = null, shown = 0;
+  for (const row of DATA.rows) {
+    if (!rowVisible(row)) continue;
+    if (row.section !== section) {
+      section = row.section;
+      const n = DATA.rows.filter(r => r.section === section && rowVisible(r)).length;
+      root.append(el("div", { class: "section-head" }, el("h2", { text: section }), el("span", { text: n + " passage" + (n === 1 ? "" : "s") })));
+    }
+    root.append(renderRow(row));
+    shown++;
+  }
+  if (!shown) root.append(el("div", { class: "empty-state", text: "No rows match the current filters." }));
+}
+
+// ── rendering: model → call ──────────────────────────────────────────────
+function renderModelView() {
+  const root = document.getElementById("view-model");
+  root.textContent = "";
+  root.append(el("p", { class: "summary", style: "margin-top:14px;max-width:80ch;color:var(--muted)",
+    text: "Every requirement ASE 2026 states in venues.yml, grouped by where it applies, with the call passages it is traced to. A requirement with no passage has no basis in the call." }));
+  const cites = {};
+  for (const row of DATA.rows) for (const m of row.model) if (m.kind === "ref") (cites[m.key] = cites[m.key] || []).push(row);
+  const table = el("table", {},
+    el("thead", {}, el("tr", {}, ["Requirement", "Level", "Applies to", "Traced to call passages"].map(h => el("th", { text: h })))));
+  const tbody = el("tbody");
+  for (const scope of DATA.scopes) {
+    const reqs = Object.values(DATA.requirements).filter(r => r.scope_id === scope.id);
+    if (!reqs.length) continue;
+    tbody.append(el("tr", { class: "scope-row" }, el("td", { colspan: "4", text: scope.name })));
+    for (const req of reqs) {
+      const rows = cites[req.key] || [];
+      tbody.append(el("tr", {},
+        el("td", {}, el("span", { class: "entry-name", text: req.display_name || req.name }), el("span", { class: "entry-curie", text: req.standard })),
+        el("td", {}, levelPill(req)),
+        el("td", { text: req.applies_to.length ? req.applies_to.join(", ") : "all artifacts" }),
+        el("td", {}, rows.length ? rows.map(r => el("a", { class: "cite", href: "#call", onclick: (e) => { e.preventDefault(); jumpTo(r.id); } },
+          el("span", { class: "chip st-" + r.status, text: r.id }))) : el("span", { class: "missing", text: "No passage" }))));
+    }
+  }
+  table.append(tbody);
+  root.append(el("div", { class: "req-table-wrap" }, table));
+}
+
+// ── rendering: uncovered call text ───────────────────────────────────────
+function renderUncoveredView() {
+  const root = document.getElementById("view-uncovered");
+  root.textContent = "";
+  if (!state.callText) {
+    root.append(el("div", { class: "empty-state" },
+      "Paste the call text (", el("button", { class: "btn", type: "button", onclick: () => togglePaste(true) }, "Show call text inline"),
+      ") to list the parts of the call that no row covers."));
+    return;
+  }
+  const covered = [];
+  const missing = [];
+  for (const row of DATA.rows) { const loc = locate(row.anchor); if (loc) covered.push([loc.s, loc.e]); else missing.push(row.id); }
+  covered.sort((a, b) => a[0] - b[0]);
+  const gaps = [];
+  let pos = 0;
+  for (const [s, e] of covered) { if (s > pos) gaps.push(callNorm.slice(pos, s)); pos = Math.max(pos, e); }
+  gaps.push(callNorm.slice(pos));
+  const pieces = gaps.map(g => g.trim()).filter(g => g.replace(/[^a-z]/gi, "").length >= 25 && !/\?$/.test(g));
+  root.append(el("p", { class: "summary", style: "margin-top:14px;max-width:80ch;color:var(--muted)",
+    text: `${covered.length} of ${DATA.rows.length} passages located. Below is the remaining call text, excluding short headings and FAQ questions. Each piece is either intentionally left out or a gap in the mapping.` }));
+  if (missing.length) root.append(el("p", { class: "missing", text: "Passages not found in the pasted text: " + missing.join(", ") }));
+  const list = el("div", { class: "uncovered" });
+  if (!pieces.length) list.append(el("div", { class: "empty-state", text: "Every substantive part of the pasted call is covered by a row." }));
+  pieces.forEach(p => list.append(el("blockquote", { class: "quote", text: p })));
+  root.append(list);
+}
+
+// ── chrome ───────────────────────────────────────────────────────────────
+function renderChips() {
+  const root = document.getElementById("status-chips");
+  root.textContent = "";
+  for (const [key, s] of Object.entries(STATUS)) {
+    const n = DATA.rows.filter(r => r.status === key).length;
+    root.append(el("button", { class: "chip st-" + key, type: "button", "aria-pressed": String(state.statuses.has(key)), title: s.text,
+      onclick: () => { state.statuses.has(key) ? state.statuses.delete(key) : state.statuses.add(key); renderChips(); renderCallView(); } },
+      s.label + " ", el("span", { class: "count", text: String(n) })));
+  }
+}
+function renderMeta() {
+  const meta = document.getElementById("meta");
+  meta.append(
+    el("span", {}, "Source: ", el("a", { href: DATA.source + (DATA.source_hash ? "#" + DATA.source_hash : ""), target: "_blank", rel: "noopener", text: "ASE 2026 Call for Artifacts" })),
+    el("span", { text: "Call retrieved " + DATA.retrieved }),
+    el("span", { text: DATA.rows.length + " passages · " + Object.keys(DATA.requirements).length + " requirements in venues.yml" }),
+    el("span", {}, "Built from ", el("code", { text: "review/ase-2026/mapping.yml" })));
+  const legend = document.getElementById("legend");
+  for (const [key, s] of Object.entries(STATUS)) legend.append(el("div", {}, el("span", { class: "chip st-" + key, text: s.label }), s.text));
+  document.getElementById("paste-source").href = DATA.source + (DATA.source_hash ? "#" + DATA.source_hash : "");
+}
+function setView(view) {
+  state.view = view;
+  for (const t of document.querySelectorAll(".tab")) t.setAttribute("aria-selected", String(t.dataset.view === view));
+  for (const v of ["call", "model", "uncovered"]) document.getElementById("view-" + v).hidden = v !== view;
+  document.getElementById("status-chips").hidden = view !== "call";
+  if (view === "model") renderModelView();
+  if (view === "uncovered") renderUncoveredView();
+  if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+}
+function jumpTo(rowId) {
+  state.statuses.clear(); state.reviewFilter = "all";
+  document.getElementById("review-filter").value = "all";
+  renderChips(); setView("call"); renderCallView();
+  const n = document.getElementById("row-" + rowId);
+  if (n) n.scrollIntoView({ block: "start" });
+}
+function togglePaste(open) {
+  const panel = document.getElementById("paste-panel");
+  panel.hidden = open === undefined ? !panel.hidden : !open;
+  document.getElementById("paste-toggle").setAttribute("aria-expanded", String(!panel.hidden));
+  if (!panel.hidden) document.getElementById("paste-input").focus();
+}
+function updatePasteStatus() {
+  const status = document.getElementById("paste-status");
+  if (!state.callText) { status.textContent = "No call text pasted."; status.className = "paste-status"; return; }
+  const found = DATA.rows.filter(r => locate(r.anchor)).length;
+  status.textContent = `${found} of ${DATA.rows.length} passages located in the pasted text.`;
+  status.className = "paste-status " + (found === DATA.rows.length ? "ok" : "warn");
+}
+function onCallTextChanged() {
+  storage(() => localStorage.setItem("ase2026-call-text", state.callText));
+  updatePasteStatus();
+  renderCallView();
+  if (state.view === "uncovered") renderUncoveredView();
+}
+
+// ── shared verdicts (db) ─────────────────────────────────────────────────
+let db = null, writeChain = Promise.resolve();
+function persistMine() {
+  const body = { rows: JSON.parse(JSON.stringify(state.mine.rows)), updated: new Date().toISOString() };
+  writeChain = writeChain.then(() => db.doc("reviews/" + state.me).set(body)).catch(e => {
+    if (e && e.code === "invalid_argument") { state.canWrite = false; state.reviewMessage = "You can read verdicts but not add your own on this page."; renderCallView(); }
+    else { state.reviewMessage = "Your last change was not saved. Try again."; renderCallView(); }
+  });
+}
+function setVerdict(rowId, v) {
+  const r = state.mine.rows[rowId] = { ...(state.mine.rows[rowId] || {}) };
+  r.v = v; r.t = new Date().toISOString();
+  if (!r.v && !r.note) delete state.mine.rows[rowId];
+  persistMine();
+  refreshReview(rowId);
+}
+function setNote(rowId, note) {
+  const r = state.mine.rows[rowId] = { ...(state.mine.rows[rowId] || {}) };
+  r.note = note.trim(); r.t = new Date().toISOString();
+  if (!r.v && !r.note) delete state.mine.rows[rowId];
+  persistMine();
+}
+function refreshReview(rowId) {
+  const old = document.querySelector(`[data-review="${rowId}"]`);
+  const row = DATA.rows.find(r => r.id === rowId);
+  if (old && row) old.replaceWith(reviewBlock(row));
+}
+async function resolveProfiles(user) {
+  const ids = Object.keys(state.reviews).filter(id => id !== state.me);
+  if (!ids.length || !user) return;
+  try { state.profiles = await user.profiles(ids); } catch (e) { /* names stay "Someone" */ }
+}
+async function startReviews() {
+  if (!window.claude || !window.claude.use) {
+    state.reviewMessage = "Shared verdicts work when this page is opened on claude.ai.";
+    renderCallView(); return;
+  }
+  const [dbNs, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+  if (!dbNs || !user) {
+    state.reviewMessage = "Sign in on claude.ai to see and add shared verdicts.";
+    renderCallView(); return;
+  }
+  db = dbNs;
+  state.me = await user.id();
+  const canData = await user.can("data.write");
+  state.canWrite = !!state.me && canData !== false;
+  state.reviewMessage = state.canWrite ? "" : "You can read verdicts but not add your own on this page.";
+  const timer = setTimeout(() => {
+    if (!state.reviewReady) { state.reviewMessage = "Shared verdicts can't be reached right now."; renderCallView(); }
+  }, 10000);
+  db.collection("reviews").onSnapshot(async snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    const next = {};
+    for (const d of snap.docs) next[d.id] = d.data() || {};
+    state.reviews = next;
+    if (!state.reviewReady && state.me && next[state.me]) state.mine = { rows: { ...(next[state.me].rows || {}) } };
+    state.reviewReady = true;
+    await resolveProfiles(user);
+    const active = document.activeElement;
+    const keepFocus = active && active.classList && active.classList.contains("note-input") ? active.id : null;
+    renderCallView();
+    if (keepFocus) { const n = document.getElementById(keepFocus); if (n) n.focus(); }
+  }, err => {
+    clearTimeout(timer);
+    state.reviewMessage = "Shared verdicts are unavailable in this view.";
+    renderCallView();
+  });
+}
+
+// ── boot ─────────────────────────────────────────────────────────────────
+function boot() {
+  renderMeta();
+  renderChips();
+  setCallText(storage(() => localStorage.getItem("ase2026-call-text"), "") || "");
+  document.getElementById("paste-input").value = state.callText;
+  updatePasteStatus();
+  renderCallView();
+
+  for (const t of document.querySelectorAll(".tab")) t.addEventListener("click", () => setView(t.dataset.view));
+  document.getElementById("review-filter").addEventListener("change", e => { state.reviewFilter = e.target.value; renderCallView(); });
+  document.getElementById("paste-toggle").addEventListener("click", () => togglePaste());
+  document.getElementById("paste-input").addEventListener("input", e => { setCallText(e.target.value); onCallTextChanged(); });
+  document.getElementById("paste-clear").addEventListener("click", () => { document.getElementById("paste-input").value = ""; setCallText(""); onCallTextChanged(); });
+  const initial = location.hash.slice(1);
+  setView(["call", "model", "uncovered"].includes(initial) ? initial : "call");
+  window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (["call", "model", "uncovered"].includes(v) && v !== state.view) setView(v); });
+
+  startReviews();
+}
+boot();
+</script>

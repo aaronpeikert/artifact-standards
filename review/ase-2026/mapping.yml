@@ -1,0 +1,614 @@
+# Traceability between the ASE 2026 Call for Artifacts and venues.yml.
+#
+# One row per passage of the call, in the call's order. Each row locates its
+# passage with two short anchor phrases (start, end) instead of copying the
+# call text, summarizes what the passage asks for, lists the parts of the
+# model that encode it, and assesses the translation.
+#
+# model references:
+#   all/<standard>          venue-wide required standard
+#   <badge>/<standard>      standard required by a badge
+#   badge:<badge>           the badge definition itself
+#   venue:<field>           a venue field (description, badging_policy,
+#                           eligible_artifact_tags)
+#
+# status:
+#   faithful      the model says what the call says
+#   interpreted   the model resolves an ambiguity or makes a judgment call
+#   divergent     the model differs from the call (scope, placement, strength)
+#   not-modeled   the call asks for something the model does not encode
+#   out-of-scope  process or policy text, deliberately not modeled
+
+venue: as:ase-2026
+source: https://conf.researchr.org/track/ase-2026/ase-2026-artifact-evaluation
+# Hash that opens the Call for Artifacts tab; deep links append a text fragment to it.
+source_hash: call-Call-for-Artifacts
+retrieved: 2026-11-24
+
+rows:
+
+  # ── Introduction ──────────────────────────────────────────────────────
+
+  - id: intro-scope
+    section: Introduction
+    anchor: ["The artifact evaluation track aims to", "current edition of ASE (2026)"]
+    summary: >
+      Artifact evaluation covers artifacts of accepted papers in the
+      Research, Industry Showcase, NIER, and Tool Demonstration tracks.
+    model: [venue:description]
+    status: faithful
+
+  - id: intro-badges
+    section: Introduction
+    anchor: ["Authors can submit an artifact for", "Artifacts Reusable badges"]
+    summary: >
+      Authors can apply for the Available and Reusable badges.
+    model: [badge:as:ase-2026-available, badge:as:ase-2026-functional, badge:as:ase-2026-reusable]
+    status: interpreted
+    assessment: >
+      The introduction names two badges, but the Evaluation Criteria section
+      lists Functional, Reusable, and Available. The model offers all three.
+    proposal: >
+      Decide whether Functional can be applied for on its own. If not, drop
+      the Functional badge and keep its standards as part of Reusable (and
+      align the call's introduction either way).
+
+  - id: intro-goal
+    section: Introduction
+    anchor: ["Our primary goal will be", "available and reusable"]
+    summary: The track's aim is to help authors make artifacts available and reusable.
+    model: []
+    status: out-of-scope
+
+  - id: intro-acm
+    section: Introduction
+    anchor: ["Definitions for all badges", "Version 1.1"]
+    summary: Badge definitions follow ACM Artifact Review and Badging v1.1.
+    model: [venue:badging_policy]
+    status: faithful
+
+  # ── 1. Prepare the artifact ───────────────────────────────────────────
+
+  - id: prep-kinds
+    section: 1. Prepare the artifact
+    anchor: ["Both executable and non-executable artifacts", "may be submitted"]
+    summary: Executable and non-executable artifacts are both accepted.
+    model: [venue:eligible_artifact_tags]
+    status: interpreted
+    assessment: >
+      The tag vocabulary has "executable" but no "non-executable" tag; the
+      model uses "data" (and "proof") as stand-ins. Requirements scoped to
+      data therefore miss non-executable artifacts that are documents, such
+      as interview guides or qualitative codebooks.
+    proposal: >
+      Add a non-executable (or "documents") artifact tag and scope the
+      non-executable requirements to it.
+
+  - id: readme-getting-started
+    section: 1. Prepare the artifact
+    anchor: ["Every artifact submission must include", "Getting Started guide within 30 minutes"]
+    summary: >
+      Every submission includes a README with a Getting Started guide:
+      description, installation instructions if any, and a smoke test with
+      expected output, completable within 30 minutes.
+    model: [all/as:readme-getting-started, as:ase-2026-functional/as:smoke-test]
+    status: faithful
+    assessment: >
+      Captured by the README standard with a 30-minute parameter. The
+      separate smoke-test standard is also listed under Functional (executable
+      artifacts only), which duplicates part of the README requirement.
+    proposal: >
+      Either drop as:smoke-test from the Functional badge or keep it as an
+      explicit executable-only check and note that the README already
+      requires it.
+
+  - id: readme-step-by-step
+    section: 1. Prepare the artifact
+    anchor: ["Step-by-step instructions, which should contain", "not supported by the artifact (and why)"]
+    summary: >
+      The README's second part gives detailed reproduction steps and states
+      which paper claims the artifact supports (and how) and which it does
+      not (and why).
+    model: [as:ase-2026-functional/as:claim-reproduction]
+    status: divergent
+    assessment: >
+      The call lists this under "Every artifact submission must include",
+      so it applies to all submissions, including those applying only for
+      Available. The model requires it only for the Functional badge (and
+      Reusable through inclusion).
+    proposal: Move as:claim-reproduction to the venue-wide required standards.
+
+  - id: readme-data
+    section: 1. Prepare the artifact
+    anchor: ["Data artifacts should cover aspects", "and storage requirements"]
+    summary: >
+      For data artifacts, the instructions cover context, provenance,
+      ethical and legal statements if relevant, and storage requirements.
+    model: [as:ase-2026-functional/as:dataset-description]
+    status: divergent
+    assessment: >
+      Same placement issue as the step-by-step instructions: part of the
+      README every submission must include, but modeled under Functional
+      only. The dataset standard also bundles schema and usage scenarios
+      from the non-executable section.
+    proposal: >
+      Make as:dataset-description venue-wide, restricted to data artifacts.
+
+  - id: readme-software
+    section: 1. Prepare the artifact
+    anchor: ["Software artifacts should contain instructions", "how to use the tool"]
+    summary: >
+      For software artifacts, the instructions show how to reproduce the
+      paper's claims (e.g., tables and figures) and document how to use the
+      tool.
+    model: [as:ase-2026-functional/as:claim-reproduction, as:ase-2026-reusable/as:reuse-documentation]
+    status: divergent
+    assessment: >
+      Reproducing tables and figures is in the claim-reproduction note.
+      Tool usage documentation is asked of every software artifact, but the
+      model only covers it through reuse documentation for the Reusable
+      badge.
+    proposal: >
+      Mention tool usage documentation in the venue note of
+      as:readme-getting-started or as:claim-reproduction.
+
+  - id: readme-proof
+    section: 1. Prepare the artifact
+    anchor: ["Proof artifacts should cover how", "reviewing proof artifacts"]
+    summary: >
+      Proof artifacts relate the parts of the proof to the formalisms in the
+      paper, following the linked proof artifact guidelines.
+    model: [as:ase-2026-functional/as:proof-to-paper-mapping]
+    status: divergent
+    assessment: >
+      Placed under Functional although it is part of the README every
+      submission includes. The generic guidance also asks to list axioms
+      and admitted lemmas, which comes from the linked guidelines rather
+      than the call text.
+    proposal: Make as:proof-to-paper-mapping venue-wide, restricted to proof artifacts.
+
+  - id: readme-encouraged
+    section: 1. Prepare the artifact
+    anchor: ["we encourage you to include further instructions", "artifact code and layout"]
+    summary: >
+      Encouraged: instructions for running the artifact on other experiments
+      and documentation of the code and its layout.
+    model: [as:ase-2026-reusable/as:reuse-documentation]
+    status: interpreted
+    assessment: >
+      The call only encourages this, for all submissions. The model makes it
+      a hygiene requirement for Reusable, reading the ACM definition of
+      Reusable ("carefully documented ... reuse and repurposing"). This is
+      stricter than the call's wording.
+    proposal: >
+      Keep if the AEC treats reuse documentation as the bar for Reusable;
+      otherwise set its ASE check level to quality.
+
+  - id: requirements-file
+    section: 1. Prepare the artifact
+    anchor: ["a REQUIREMENTS file covering the architecture", "dune-project), if relevant"]
+    summary: >
+      A REQUIREMENTS file states the architecture and hardware/software
+      requirements; machine-readable dependency files are encouraged.
+    model: [all/as:requirements-file]
+    status: faithful
+
+  - id: status-file
+    section: 1. Prepare the artifact
+    anchor: ["a STATUS file stating the badge(s)", "the respective badge(s)"]
+    summary: A STATUS file names the badges applied for, with a short justification.
+    model: [all/as:status-file]
+    status: faithful
+
+  - id: license-file
+    section: 1. Prepare the artifact
+    anchor: ["a LICENSE file describing the terms", "license for non-executable artifacts"]
+    summary: >
+      A LICENSE file states terms of use and distribution. For Available,
+      the license must ensure public availability. Open-source licenses are
+      recommended for executable artifacts, data licenses for others.
+    model: [all/as:license-file, as:ase-2026-available/as:license-file]
+    status: faithful
+
+  - id: file-formats
+    section: 1. Prepare the artifact
+    anchor: ["All files must be provided as plain text", "packaged with the artifact"]
+    summary: >
+      README, REQUIREMENTS, STATUS, and LICENSE are plain text (e.g., txt,
+      md) or PDF, packaged with the artifact.
+    model: [all/as:readme-getting-started]
+    status: not-modeled
+    assessment: >
+      Only the generic README guidance mentions plain text, Markdown, or
+      PDF. Nothing states the format rule for REQUIREMENTS, STATUS, and
+      LICENSE, and no automated check covers it.
+    proposal: >
+      Add a venue note (or a small "plain-text documentation files"
+      implementation with a file-type check).
+
+  - id: exec-definition
+    section: 1. Prepare the artifact
+    anchor: ["Executable artifacts contain a script", "consider the following"]
+    summary: Executable artifacts contain a script, tool, or software system.
+    model: [venue:eligible_artifact_tags]
+    status: faithful
+
+  - id: exec-container
+    section: 1. Prepare the artifact
+    anchor: ["To avoid installation problems", "(AEC) chairs"]
+    summary: >
+      Executable artifacts are required to come as container (Docker,
+      Podman) or VM (OVF/OVA) images; other formats need the chairs' approval.
+    model: [as:ase-2026-functional/as:container-or-vm]
+    status: divergent
+    assessment: >
+      The call says "we require" for every executable artifact. The model
+      requires an image only for the Functional and Reusable badges, so an
+      executable artifact applying only for Available would not need one.
+    proposal: >
+      Move as:container-or-vm to the venue-wide standards, restricted to
+      executable artifacts.
+
+  - id: exec-progress
+    section: 1. Prepare the artifact
+    anchor: ["The AEC members should be able to evaluate", "completion percentage)"]
+    summary: Artifacts should be quick to evaluate; longer runs show progress messages.
+    model: [as:ase-2026-reusable/as:push-button-evaluation]
+    status: divergent
+    assessment: >
+      Progress messages are only recorded as a note on push-button
+      evaluation under Reusable. Push-button evaluation (a single script
+      regenerating all results) is not asked for by the call.
+    proposal: >
+      Record progress messages as a note on as:scaled-down-evaluation
+      (Functional), and decide whether push-button evaluation belongs in the
+      ASE model at all.
+
+  - id: exec-reduced-scope
+    section: 1. Prepare the artifact
+    anchor: ["For long-running experiments, please provide", "in the artifact documentation"]
+    summary: >
+      Long-running experiments offer a reduced scope that can be validated
+      in one day or less, with instructions for both full and reduced scope.
+    model: [as:ase-2026-functional/as:scaled-down-evaluation]
+    status: interpreted
+    assessment: >
+      Content matches, with a 24-hour parameter. Placed under Functional;
+      the call states it for all executable artifacts, which matters little
+      in practice since execution is assessed for Functional.
+
+  - id: exec-hardware
+    section: 1. Prepare the artifact
+    anchor: ["In case of specific hardware requirements", "indicate them in the submission form"]
+    summary: Specific hardware needs (GPUs, CPU models) are declared in the submission form.
+    model: [all/as:requirements-file, as:ase-2026-functional/as:system-introspection-dump]
+    status: interpreted
+    assessment: >
+      The submission form is not part of the artifact, so this is recorded as
+      a note on the REQUIREMENTS standard. The optional hardware
+      introspection dump has no basis in the call; it was added as a
+      recommendation.
+    proposal: Drop as:system-introspection-dump from the ASE model, or keep it labeled optional.
+
+  - id: exec-no-downloads
+    section: 1. Prepare the artifact
+    anchor: ["Please try to avoid downloading content", "(to ensure self-containedness)"]
+    summary: Avoid downloading content over the internet during experiments or tests.
+    model: [as:ase-2026-functional/as:self-contained]
+    status: faithful
+    assessment: >
+      Lowered from the generic hygiene level to quality to match "please
+      try to avoid".
+
+  - id: exec-closed-source
+    section: 1. Prepare the artifact
+    anchor: ["as well as closed source software libraries", "necessary for your submitted work"]
+    summary: >
+      Avoid closed-source libraries, frameworks, operating systems, and
+      container formats unless necessary.
+    model: []
+    status: not-modeled
+    assessment: >
+      Only the generic guidance of as:open-file-formats mentions closed-source
+      dependencies, and that standard is restricted to data artifacts in the
+      ASE model. Nothing covers executable artifacts.
+    proposal: >
+      Add an "open dependencies" implementation (quality level) for
+      executable artifacts, or extend as:self-contained's venue note.
+
+  - id: exec-file-formats
+    section: 1. Prepare the artifact
+    anchor: ["If possible, widely supported file formats", "CSV/JSON for data)"]
+    summary: >
+      If possible, use widely supported formats (.zip/.tar.gz, .odt/.pdf,
+      CSV/JSON).
+    model: [as:ase-2026-functional/as:open-file-formats]
+    status: divergent
+    assessment: >
+      The call phrases this as "if possible" and places it in the executable
+      section, so it applies to all artifacts. The model applies it only to
+      data artifacts and at the hygiene level.
+    proposal: >
+      Remove the data-only restriction and set the ASE check level to
+      quality.
+
+  - id: exec-commercial-services
+    section: 1. Prepare the artifact
+    anchor: ["In case your artifact relies on commercial services", "rate-limited, if possible"]
+    summary: >
+      Commercial services (e.g., closed AI models) stay accessible to
+      reviewers for the whole review period without compromising their
+      anonymity, e.g., via API keys in the submission form, rate-limited if
+      possible.
+    model: [as:ase-2026-functional/as:evaluator-service-credentials]
+    status: interpreted
+    assessment: >
+      Content matches the venue note. The generic guidance adds two things
+      the call does not ask for: documenting service and model versions, and
+      providing cached responses. Placed under Functional, while the call
+      states it for every artifact that relies on such services.
+
+  # Non-executable artifacts
+
+  - id: nonexec-package
+    section: 1. Prepare the artifact
+    anchor: ["Non-executable artifacts only contain data", "tar.gz file)"]
+    summary: >
+      Non-executable artifacts contain data and documents usable with common
+      tools and can be submitted as one optionally compressed package.
+    model: [as:ase-2026-functional/as:open-file-formats]
+    status: interpreted
+    assessment: >
+      The call says "can be submitted"; the model requires a single archive
+      at the hygiene level, for data artifacts only.
+
+  - id: nonexec-tools
+    section: 1. Prepare the artifact
+    anchor: ["Prepare instructions and list the tools", "required to open the files"]
+    summary: Provide instructions and list the tools needed to open the files.
+    model: [as:ase-2026-functional/as:open-file-formats]
+    status: faithful
+
+  - id: nonexec-dataset-context
+    section: 1. Prepare the artifact
+    anchor: ["In case of datasets: Please document", "and storage requirements"]
+    summary: >
+      Datasets document context, provenance, ethical and legal statements,
+      and storage requirements.
+    model: [as:ase-2026-functional/as:dataset-description]
+    status: faithful
+
+  - id: nonexec-dataset-schema
+    section: 1. Prepare the artifact
+    anchor: ["Clearly describe and explain the features", "schema of the dataset"]
+    summary: Describe the dataset's features (e.g., columns) and schema.
+    model: [as:ase-2026-functional/as:dataset-description]
+    status: faithful
+
+  - id: nonexec-dataset-usage
+    section: 1. Prepare the artifact
+    anchor: ["List the usage scenarios", ""]
+    summary: List the dataset's usage scenarios.
+    model: [as:ase-2026-functional/as:dataset-description]
+    status: faithful
+
+  # ── 2. Make the artifact available ────────────────────────────────────
+
+  - id: avail-archival
+    section: 2. Make the artifact available
+    anchor: ["The authors need to make the packaged artifact", "via an archival repository"]
+    summary: >
+      The packaged artifact must be available to the PC via an archival
+      repository.
+    model: [all/as:long-term-archival]
+    status: faithful
+
+  - id: avail-examples
+    section: 2. Make the artifact available
+    anchor: ["There are several permanent archival repositories", "Zenodo and FigShare"]
+    summary: Examples are Software Heritage, Zenodo, and FigShare.
+    model: [all/as:long-term-archival]
+    status: faithful
+    assessment: >
+      The allowed-archives parameter also accepts Dryad, which the call
+      names in the Available badge definition.
+
+  - id: avail-github
+    section: 2. Make the artifact available
+    anchor: ["Please note that platforms that do not guarantee", "do not qualify"]
+    summary: Platforms without long-term archival guarantees, such as GitHub, do not qualify.
+    model: [all/as:long-term-archival]
+    status: faithful
+
+  - id: avail-doi
+    section: 2. Make the artifact available
+    anchor: ["Obtain the assigned DOI", "for the artifact"]
+    summary: Obtain a DOI for the artifact.
+    model: [all/as:persistent-identifier]
+    status: interpreted
+    assessment: >
+      The generic guidance adds that the DOI should identify a specific
+      version rather than a concept record, which the call does not say.
+      The call also names Software Heritage as an archive, but Software
+      Heritage issues SWHIDs, not DOIs; an artifact archived only there
+      cannot meet the DOI requirement.
+    proposal: >
+      Clarify in the call (and the venue note) whether a SWHID is acceptable
+      in place of a DOI.
+
+  - id: avail-temporary
+    section: 2. Make the artifact available
+    anchor: ["Temporary drives (e.g., Dropbox", "prone to changes"]
+    summary: Dropbox, Google Drive, and personal websites count as non-persistent.
+    model: [all/as:long-term-archival]
+    status: faithful
+
+  # ── 3. Submit the artifact ────────────────────────────────────────────
+
+  - id: abstract-length
+    section: 3. Submit the artifact
+    anchor: ["Include a short abstract (maximum two pages)", "all the following titles"]
+    summary: The artifact includes a short abstract of at most two pages with fixed subsections.
+    model: [all/as:artifact-abstract]
+    status: faithful
+
+  - id: abstract-sections
+    section: 3. Submit the artifact
+    anchor: ["Paper title", "unusual environments, including GPUs"]
+    summary: >
+      Subsections: paper title, link to the paper, purpose, badges with
+      reasons, assumed skills and hardware, provenance, and access
+      instructions including OS or GPU needs.
+    model: [all/as:artifact-abstract]
+    status: faithful
+
+  - id: abstract-data
+    section: 3. Submit the artifact
+    anchor: ["If the data is very large", "its usage scenarios"]
+    summary: >
+      Large or special-format data ships with instructions; the submission
+      explains the dataset, its schema, and usage scenarios.
+    model: [all/as:artifact-abstract, as:ase-2026-functional/as:dataset-description]
+    status: faithful
+
+  - id: abstract-install-time
+    section: 3. Submit the artifact
+    anchor: ["If reviewers have to spend more than 30 minutes", "will be accepted"]
+    summary: Installation taking reviewers more than 30 minutes makes acceptance unlikely.
+    model: [all/as:readme-getting-started]
+    status: faithful
+    assessment: >
+      The call has two 30-minute statements (completing the Getting Started
+      guide, and installing the tool). The model folds both into one
+      getting_started_minutes parameter.
+
+  - id: acm-policies
+    section: 3. Submit the artifact
+    anchor: ["By submitting your article to an ACM Publication", "as per ACM Publications Policy"]
+    summary: >
+      Authors are subject to ACM Publications Policies, including the policy
+      on research involving human participants.
+    model: []
+    status: out-of-scope
+    assessment: >
+      A paper-level policy, not a property of the artifact. Ethics statements
+      for data are covered by as:dataset-description.
+
+  # ── Review ────────────────────────────────────────────────────────────
+
+  - id: review-process
+    section: Review
+    anchor: ["uses a single-anonymous review process", "will review each submission"]
+    summary: Single-anonymous review; three reviews per artifact.
+    model: [venue:description]
+    status: faithful
+
+  - id: review-rejection
+    section: Review
+    anchor: ["If AEC members do not find sufficient", "the abstract will be rejected"]
+    summary: >
+      Without sufficient evidence of availability or reusability under the
+      badge definitions, the submission is rejected.
+    model: []
+    status: not-modeled
+    assessment: >
+      The schema has no notion of decision rules. The call says "abstract"
+      where it presumably means the artifact submission.
+    proposal: >
+      Fix the wording in the call. A decision rule could later be modeled as
+      a badge attribute (e.g., "rejected if no badge is met").
+
+  # ── Evaluation Criteria and Outcome ───────────────────────────────────
+
+  - id: outcome-one-of
+    section: Evaluation Criteria and Outcome
+    anchor: ["An artifact may be awarded one of", "artifact badging guidelines"]
+    summary: An artifact may be awarded one of the listed badges.
+    model: [badge:as:ase-2026-reusable]
+    status: interpreted
+    assessment: >
+      Read literally, badges are exclusive. The model follows ACM practice:
+      Available combines with Functional or Reusable, and Reusable includes
+      Functional.
+    proposal: Confirm that Available can be combined with the other badges.
+
+  - id: badge-functional
+    section: Evaluation Criteria and Outcome
+    anchor: ["The artifact is found to be documented", "verification and validation"]
+    summary: >
+      Functional: documented, consistent, complete, exercisable, with
+      evidence of verification and validation.
+    model: [badge:as:ase-2026-functional]
+    status: faithful
+
+  - id: badge-reusable
+    section: Evaluation Criteria and Outcome
+    anchor: ["The artifact is of a quality that significantly", "reuse and repurposing is facilitated"]
+    summary: >
+      Reusable: all Functional qualities, plus very careful documentation
+      and structure that facilitate reuse and repurposing.
+    model: [badge:as:ase-2026-reusable]
+    status: faithful
+
+  - id: badge-available
+    section: Evaluation Criteria and Outcome
+    anchor: ["Author-created artifacts relevant to the paper", "FigShare, or Dryad)"]
+    summary: >
+      Available: placed on a publicly accessible archival repository with a
+      DOI; the repository has a declared plan for permanent accessibility.
+    model: [badge:as:ase-2026-available, as:ase-2026-available/as:long-term-archival, as:ase-2026-available/as:persistent-identifier]
+    status: faithful
+
+  - id: badge-available-das
+    section: Evaluation Criteria and Outcome
+    anchor: ["We recommend adding the DOI link", "end of your paper"]
+    summary: It is recommended to cite the DOI in a data availability statement at the end of the paper.
+    model: [all/as:persistent-identifier]
+    status: faithful
+
+  - id: award-distinguished
+    section: Evaluation Criteria and Outcome
+    anchor: ["Artifacts that go beyond expectations", "feedback from the AEC"]
+    summary: >
+      A Distinguished Artifact award goes to artifacts beyond expectations,
+      selected from review scores and AEC feedback.
+    model: [badge:as:ase-2026-distinguished]
+    status: faithful
+
+  # ── FAQ ───────────────────────────────────────────────────────────────
+
+  - id: faq-purpose
+    section: FAQ
+    anchor: ["We want to encourage authors", "improve the submitted artifacts"]
+    summary: Purpose of artifact evaluation and the AEC's constructive stance.
+    model: []
+    status: out-of-scope
+
+  - id: faq-qualifies
+    section: FAQ
+    anchor: ["Artifacts include (but are not limited to)", "any combination of the above"]
+    summary: >
+      Artifacts include software, tools, frameworks, datasets, test suites,
+      machine-checkable proofs, or combinations.
+    model: [venue:eligible_artifact_tags]
+    status: interpreted
+    assessment: >
+      Frameworks and test suites have no tag of their own; the model relies
+      on executable, tool, and data to cover them.
+
+  - id: faq-not-research
+    section: FAQ
+    anchor: ["We will assess the artifacts themselves", "by the conference PC)"]
+    summary: The AEC assesses the artifact, not the research quality.
+    model: []
+    status: out-of-scope
+
+  - id: faq-results-validated
+    section: FAQ
+    anchor: ["The badges indicate that a", "“Artifacts Evaluated” badges"]
+    summary: >
+      Results Validated badges are not awarded; artifacts of accepted
+      reproducibility or replicability studies can still get Artifacts
+      Evaluated badges.
+    model: [venue:description]
+    status: faithful

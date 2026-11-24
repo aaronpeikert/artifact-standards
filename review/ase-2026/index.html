@@ -1,0 +1,716 @@
+<title>ASE 2026 Call Mapping</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&display=swap">
+<style>
+/* Layout: a traceability ledger. Each row pairs a passage of the call (left,
+   set in serif like the source document) with what the model encodes (right,
+   set in sans/mono like the YAML), with the assessment and reviewer verdicts
+   underneath. */
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --sunken: #eaeef0;
+  --line: #d5dde1;
+  --ink: #14212a;
+  --muted: #55646e;
+  --accent: #006699;
+  --accent-soft: #e1eff6;
+
+  --st-faithful: #2e7a4b;      --st-faithful-bg: #e3f2e8;
+  --st-interpreted: #946000;   --st-interpreted-bg: #fbf0d9;
+  --st-divergent: #b23b22;     --st-divergent-bg: #fbe5df;
+  --st-not-modeled: #6a4b9e;   --st-not-modeled-bg: #ece6f6;
+  --st-out-of-scope: #5f6b74;  --st-out-of-scope-bg: #e7ebee;
+
+  --font-display: "Schibsted Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-source: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f171c; --surface: #16222a; --sunken: #1d2b34; --line: #2c3c46;
+    --ink: #e3eaee; --muted: #9aabb6; --accent: #5fb4dd; --accent-soft: #173444;
+    --st-faithful: #6fcf95;     --st-faithful-bg: #17342a;
+    --st-interpreted: #e6b450;  --st-interpreted-bg: #3a2e14;
+    --st-divergent: #f08a72;    --st-divergent-bg: #42211a;
+    --st-not-modeled: #b9a0ea;  --st-not-modeled-bg: #2c2442;
+    --st-out-of-scope: #a3b0b9; --st-out-of-scope-bg: #26323a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f171c; --surface: #16222a; --sunken: #1d2b34; --line: #2c3c46;
+  --ink: #e3eaee; --muted: #9aabb6; --accent: #5fb4dd; --accent-soft: #173444;
+  --st-faithful: #6fcf95;     --st-faithful-bg: #17342a;
+  --st-interpreted: #e6b450;  --st-interpreted-bg: #3a2e14;
+  --st-divergent: #f08a72;    --st-divergent-bg: #42211a;
+  --st-not-modeled: #b9a0ea;  --st-not-modeled-bg: #2c2442;
+  --st-out-of-scope: #a3b0b9; --st-out-of-scope-bg: #26323a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1180px; margin-inline: auto; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, textarea:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+
+/* Header */
+.masthead { padding-block: 28px 18px; display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.masthead h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: -0.01em; }
+.masthead p { margin: 0; max-width: 72ch; color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+
+/* Toolbar */
+.toolbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; display: grid; gap: 10px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.toolbar-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tabs { display: flex; gap: 2px; background: var(--sunken); padding: 3px; border-radius: 8px; }
+.tab {
+  font: inherit; font-size: 13px; font-weight: 600; border: 0; background: transparent; color: var(--muted);
+  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+}
+.tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08); }
+.spacer { flex: 1; }
+.filter-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+select, .btn {
+  font: inherit; font-size: 13px; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 10px; cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+/* Status chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap; border: 1px solid transparent;
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.st-faithful { color: var(--st-faithful); background: var(--st-faithful-bg); }
+.st-interpreted { color: var(--st-interpreted); background: var(--st-interpreted-bg); }
+.st-divergent { color: var(--st-divergent); background: var(--st-divergent-bg); }
+.st-not-modeled { color: var(--st-not-modeled); background: var(--st-not-modeled-bg); }
+.st-out-of-scope { color: var(--st-out-of-scope); background: var(--st-out-of-scope-bg); }
+button.chip { font-family: inherit; cursor: pointer; }
+button.chip[aria-pressed="true"] { border-color: currentColor; }
+.chips:has(button[aria-pressed="true"]) button.chip[aria-pressed="false"] { opacity: 0.5; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.count { font-variant-numeric: tabular-nums; font-weight: 500; }
+
+/* Paste panel */
+.paste {
+  margin-top: 12px;
+  background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius);
+  padding: 12px 14px; display: grid; gap: 8px; font-size: 13.5px;
+}
+.paste p { margin: 0; color: var(--muted); }
+.paste textarea {
+  width: 100%; min-height: 90px; resize: vertical; font: 13px/1.4 var(--font-mono);
+  color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px;
+}
+.paste-status { font-size: 13px; }
+.ok { color: var(--st-faithful); } .warn { color: var(--st-divergent); }
+
+/* Section headers */
+.section-head {
+  margin-top: 28px; padding-bottom: 6px; border-bottom: 2px solid var(--ink);
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.section-head h2 { font-size: 19px; }
+.section-head span { color: var(--muted); font-size: 13px; }
+
+/* Rows */
+.row {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  margin-top: 12px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+.row > * { min-width: 0; }
+.call, .model { padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.call { border-right: 1px solid var(--line); background: linear-gradient(var(--surface), var(--surface)); }
+.cell-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.row-id { font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-weight: 400; }
+.quote {
+  font-family: var(--font-source); font-size: 16px; line-height: 1.55; margin: 0;
+  border-left: 3px solid var(--line); padding-left: 12px;
+}
+.summary { margin: 0; }
+.quote + .summary { font-size: 13.5px; color: var(--muted); }
+.anchor { font-size: 13px; color: var(--muted); }
+.anchor em { font-family: var(--font-source); font-size: 14.5px; color: var(--ink); }
+.source-link { font-size: 13px; font-weight: 600; text-decoration: none; }
+.source-link:hover { text-decoration: underline; }
+.missing { color: var(--st-divergent); font-size: 13px; }
+
+.model-empty { color: var(--muted); font-style: italic; font-size: 14px; }
+.entry { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.entry > summary {
+  list-style: none; cursor: pointer; padding: 8px 10px; display: grid; gap: 4px;
+}
+.entry > summary::-webkit-details-marker { display: none; }
+.entry-top { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.entry-name { font-weight: 600; }
+.entry-curie { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.entry-note { font-size: 13.5px; color: var(--ink); }
+.entry[open] > summary { border-bottom: 1px solid var(--line); }
+.entry-body { padding: 10px; display: grid; gap: 10px; font-size: 13.5px; }
+.entry-body h4 { margin: 0 0 3px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.entry-body ul { margin: 0; padding-left: 18px; }
+.entry-body p { margin: 0; }
+.cmd { display: block; white-space: pre-wrap; word-break: break-all; background: var(--sunken); padding: 6px 8px; border-radius: 4px; margin-top: 3px; }
+.pill {
+  font-size: 11.5px; font-weight: 600; padding: 1px 7px; border-radius: 4px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap;
+}
+.pill-level { background: var(--sunken); color: var(--muted); }
+.pill-level.changed { background: var(--st-interpreted-bg); color: var(--st-interpreted); }
+.params { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 12.5px; }
+.params code { background: var(--sunken); padding: 1px 5px; border-radius: 3px; }
+
+.verdict {
+  grid-column: 1 / -1; border-top: 1px solid var(--line);
+  padding: 12px 16px; display: grid; gap: 10px;
+  background: var(--sunken);
+}
+.verdict-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.verdict p { margin: 0; max-width: 95ch; }
+.assess-label { font-weight: 600; }
+.proposal { border-left: 3px solid var(--accent); padding-left: 10px; }
+
+.review { display: grid; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.review-controls { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.vbtn {
+  font: inherit; font-size: 12.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+}
+.vbtn[aria-pressed="true"][data-v="ok"] { background: var(--st-faithful-bg); color: var(--st-faithful); border-color: currentColor; }
+.vbtn[aria-pressed="true"][data-v="change"] { background: var(--st-divergent-bg); color: var(--st-divergent); border-color: currentColor; }
+.vbtn[aria-pressed="true"][data-v="question"] { background: var(--st-interpreted-bg); color: var(--st-interpreted); border-color: currentColor; }
+.vbtn:disabled { cursor: not-allowed; opacity: 0.55; }
+.note-input {
+  flex: 1 1 260px; min-width: 0; font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 5px 9px;
+}
+.saved { font-size: 12px; color: var(--muted); }
+.others { display: grid; gap: 4px; }
+.other { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; }
+.other img { width: 20px; height: 20px; border-radius: 50%; flex: none; margin-top: 1px; }
+.other .who { font-weight: 600; }
+.vtag { font-size: 11.5px; font-weight: 600; padding: 0 6px; border-radius: 4px; }
+.vtag-ok { background: var(--st-faithful-bg); color: var(--st-faithful); }
+.vtag-change { background: var(--st-divergent-bg); color: var(--st-divergent); }
+.vtag-question { background: var(--st-interpreted-bg); color: var(--st-interpreted); }
+.review-off { font-size: 13px; color: var(--muted); }
+
+/* Model → call view */
+.req-table-wrap { overflow-x: auto; margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+th { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--sunken); }
+td .entry-curie { display: block; }
+.cite { display: inline-flex; gap: 4px; align-items: center; margin: 0 6px 4px 0; font-size: 12.5px; text-decoration: none; }
+.scope-row td { background: var(--accent-soft); font-weight: 600; font-family: var(--font-display); }
+
+/* Uncovered view */
+.uncovered { margin-top: 14px; display: grid; gap: 8px; }
+.uncovered .quote { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--st-not-modeled); border-radius: var(--radius); padding: 10px 12px; font-size: 15px; }
+.empty-state { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-top: 14px; color: var(--muted); }
+
+.legend { display: grid; gap: 6px; font-size: 13.5px; margin-top: 4px; }
+.legend div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+
+@media (max-width: 760px) {
+  .row { grid-template-columns: 1fr; }
+  .call { border-right: 0; border-bottom: 1px solid var(--line); }
+  .toolbar { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Artifact standards · traceability review</div>
+    <h1 id="title">ASE 2026 Call Mapping</h1>
+    <p>Each row puts one passage of the ASE 2026 Call for Artifacts next to what <code>venues.yml</code> and <code>data.yml</code> encode for it, with an assessment of the translation. Mark each row as faithful, needing a change, or open for discussion; verdicts are shared with everyone who opens this page.</p>
+    <div class="meta" id="meta"></div>
+    <details class="legend-wrap">
+      <summary class="source-link" style="cursor:pointer">What the statuses mean</summary>
+      <div class="legend" id="legend"></div>
+    </details>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <div class="tabs" role="tablist" aria-label="View">
+        <button class="tab" role="tab" id="tab-call" data-view="call" aria-selected="true">Call → model</button>
+        <button class="tab" role="tab" id="tab-model" data-view="model" aria-selected="false">Model → call</button>
+        <button class="tab" role="tab" id="tab-uncovered" data-view="uncovered" aria-selected="false">Uncovered call text</button>
+      </div>
+      <span class="spacer"></span>
+      <label class="filter-label" for="review-filter">Show</label>
+      <select id="review-filter">
+        <option value="all">All rows</option>
+        <option value="mine-open">Not yet reviewed by me</option>
+        <option value="flagged">Flagged by anyone</option>
+      </select>
+      <button class="btn" id="paste-toggle" type="button" aria-expanded="false">Show call text inline</button>
+    </div>
+    <div class="chips" id="status-chips" aria-label="Filter by status"></div>
+  </div>
+  <div class="paste" id="paste-panel" hidden>
+    <p>To see each passage inline and find call text that no row covers, open the <a id="paste-source" href="#">call for artifacts</a>, select the whole Call for Artifacts tab, copy it, and paste it here. It stays in this browser only.</p>
+    <textarea id="paste-input" aria-label="Call for Artifacts text" placeholder="Paste the Call for Artifacts text here"></textarea>
+    <div class="toolbar-row">
+      <span class="paste-status" id="paste-status"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="paste-clear" type="button">Clear</button>
+    </div>
+  </div>
+
+  <main id="view-call"></main>
+  <main id="view-model" hidden></main>
+  <main id="view-uncovered" hidden></main>
+</div>
+
+<script>
+const DATA = {"venue": {"id": "as:ase-2026", "name": "ASE 2026", "url": "https://conf.researchr.org/track/ase-2026/ase-2026-artifact-evaluation"}, "source": "https://conf.researchr.org/track/ase-2026/ase-2026-artifact-evaluation", "source_hash": "call-Call-for-Artifacts", "retrieved": "2026-11-24", "requirements": {"all/as:readme-getting-started": {"kind": "standard", "key": "all/as:readme-getting-started", "scope": "All submissions", "scope_id": "all", "standard": "as:readme-getting-started", "name": "README with Getting Started Guide", "principle": "Artifact Documentation", "display_name": "README with Getting Started guide (≤ 30 min) — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "The README has a Getting Started part (description, installation, smoke test with expected output) and a Step-by-Step part. Plain text, Markdown, or PDF. Artifacts whose installation takes reviewers more than 30 minutes are unlikely to be accepted.", "parameters": [{"name": "getting_started_minutes", "value": "30", "description": "Time budget for completing the Getting Started guide."}], "guidance": "Provide a README (plain text, Markdown, or PDF) at the artifact root whose first part is a Getting Started guide: what the artifact is, installation instructions (if any), and a smoke test with its expected output. An evaluator should be able to complete the Getting Started guide within the venue's time budget (parameter `getting_started_minutes`). Its second part gives the step-by-step instructions for the paper's experiments (see `as:claim-reproduction`).", "examples": ["README.md with sections \"Getting Started\" and \"Step-by-Step Instructions\"", "Smoke test such as `docker run artifact ./smoke.sh` followed by the expected console output"], "human_checks": ["Follow the Getting Started guide on a fresh machine and verify that it describes the artifact, that installation succeeds, and that the smoke test produces the documented output within the time budget."], "automated_checks": [{"id": "as:readme-present", "description": "Check that a README file is present at the artifact root.", "command": "find \"${artifact_root}\" -maxdepth 1 -type f -iname \"README*\" | grep -q ."}]}, "all/as:requirements-file": {"kind": "standard", "key": "all/as:requirements-file", "scope": "All submissions", "scope_id": "all", "standard": "as:requirements-file", "name": "REQUIREMENTS File", "principle": "Declared Requirements", "display_name": "REQUIREMENTS file — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "States architecture, hardware, and software requirements. Specific hardware (e.g., GPUs, particular CPU models) must also be declared in the submission form.", "parameters": [], "guidance": "Provide a REQUIREMENTS file at the artifact root that states the CPU architecture (e.g., x86-64, ARM) and the hardware and software the artifact needs, such as storage, memory, GPUs or other non-commodity peripherals, the operating system, and the container or VM runtime. Machine-readable dependency specifications are encouraged in addition.", "examples": ["REQUIREMENTS.md: x86-64, 16 GB RAM, 50 GB disk, Docker 24+, optional NVIDIA GPU with 12 GB", "Dockerfile, Pipfile, requirements.txt, renv.lock, or dune-project"], "human_checks": ["Verify that the REQUIREMENTS file names the architecture and the hardware and software needed, and that these match what running the artifact actually required."], "automated_checks": [{"id": "as:requirements-file-present", "description": "Check that a REQUIREMENTS file is present at the artifact root.", "command": "find \"${artifact_root}\" -maxdepth 1 -type f -iname \"REQUIREMENTS*\" | grep -q ."}]}, "all/as:status-file": {"kind": "standard", "key": "all/as:status-file", "scope": "All submissions", "scope_id": "all", "standard": "as:status-file", "name": "STATUS File with Badge Claims", "principle": "Evaluation Self-Description", "display_name": "STATUS file — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": null, "parameters": [], "guidance": "Provide a STATUS file at the artifact root that lists the badges applied for and briefly justifies why the artifact meets the criteria of each.", "examples": ["STATUS.md: Applying for Available and Reusable. Available: archived on Zenodo with DOI ... Reusable: ..."], "human_checks": ["Verify that the STATUS file names the badges applied for and that each claim is justified with respect to the venue's badge criteria."], "automated_checks": [{"id": "as:status-file-present", "description": "Check that a STATUS file is present at the artifact root.", "command": "find \"${artifact_root}\" -maxdepth 1 -type f -iname \"STATUS*\" | grep -q ."}]}, "all/as:license-file": {"kind": "standard", "key": "all/as:license-file", "scope": "All submissions", "scope_id": "all", "standard": "as:license-file", "name": "LICENSE File", "principle": "Licensing", "display_name": "LICENSE file — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "Open-source license recommended for executable artifacts, a data license for non-executable ones.", "parameters": [], "guidance": "Provide a LICENSE file at the artifact root stating the terms of use and distribution. Prefer an open-source license for software and an open data license for data. For an availability badge, the license must allow public access to the artifact.", "examples": ["MIT, Apache-2.0, or GPL-3.0 for software", "CC-BY-4.0 or CC0-1.0 for data", "REUSE-compliant LICENSES/ directory for mixed licensing"], "human_checks": ["Verify that the license covers all parts of the artifact and permits the access and use the claimed badges require."], "automated_checks": [{"id": "as:license-file-present", "description": "Check that a LICENSE or COPYING file is present at the artifact root.", "command": "find \"${artifact_root}\" -maxdepth 1 -type f \\( -iname \"LICENSE*\" -o -iname \"LICENCE*\" -o -iname \"COPYING*\" \\) | grep -q ."}]}, "all/as:artifact-abstract": {"kind": "standard", "key": "all/as:artifact-abstract", "scope": "All submissions", "scope_id": "all", "standard": "as:artifact-abstract", "name": "Artifact Abstract", "principle": "Evaluation Self-Description", "display_name": "Artifact abstract (≤ 2 pages) — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": null, "parameters": [{"name": "max_pages", "value": "2", "description": "Page limit of the artifact abstract."}], "guidance": "Include a short abstract (within the venue's page limit, parameter `max_pages`) covering: the paper title and a link to the paper accessible to evaluators; the artifact's purpose; the badges applied for and why; the technical skills and hardware needed to evaluate it; its provenance (where it can be obtained); and instructions on how to access and use it, including, for datasets, an explanation of the data, its schema, and usage scenarios.", "examples": ["ABSTRACT.pdf with the seven sections listed above"], "human_checks": ["Verify that the abstract stays within the page limit and covers paper, purpose, badges, required skills and hardware, provenance, and usage instructions."], "automated_checks": []}, "all/as:long-term-archival": {"kind": "standard", "key": "all/as:long-term-archival", "scope": "All submissions", "scope_id": "all", "standard": "as:long-term-archival", "name": "Use a long-term archival service", "principle": "Artifact Availability", "display_name": "Archival repository (no GitHub) — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "All artifacts must be made available via an archival repository such as Software Heritage, Zenodo, or FigShare. GitHub, Dropbox, Google Drive, and personal websites do not qualify.", "parameters": [{"name": "allowed_archives", "value": "^https://(doi\\.org/10\\.5281/zenodo\\.|zenodo\\.org/|archive\\.softwareheritage\\.org/|(www\\.)?figshare\\.com/|doi\\.org/10\\.6084/m9\\.figshare\\.|datadryad\\.org/|doi\\.org/10\\.5061/dryad\\.)", "description": "Archives named in the call (Software Heritage, Zenodo, FigShare, Dryad)."}], "guidance": "Authors must deposit their artifacts in a long-term archival service with a declared plan for permanent accessibility. A link to a code-hosting platform (e.g., GitHub) may complement, but not replace, the archived copy.", "examples": ["Software Heritage (for software repositories)", "Zenodo", "FigShare", "Dryad"], "human_checks": ["Verify that the artifact link points to a long-term archival service (not a code-hosting platform, file-sharing service, or personal website) and that the archived content matches the submitted artifact."], "automated_checks": [{"id": "as:artifact-availability-whitelist", "description": "Verify that the submitted artifact is hosted on one long-term archival service.", "command": "[[ \"${artifact_url}\" =~ ${allowed_archives} ]]"}]}, "all/as:persistent-identifier": {"kind": "standard", "key": "all/as:persistent-identifier", "scope": "All submissions", "scope_id": "all", "standard": "as:persistent-identifier", "name": "Persistent Identifier (DOI)", "principle": "Artifact Availability", "display_name": "DOI — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "Obtain a DOI; citing it in the paper's data availability statement is recommended.", "parameters": [], "guidance": "Authors should obtain a DOI for the archived version of the artifact (archives such as Zenodo, FigShare, or Dryad mint one on publication) and reference it in the paper, ideally in a data availability statement. The DOI should identify a specific version, not only a concept record.", "examples": ["Zenodo version DOI (10.5281/zenodo.NNNNNNN)", "Software Heritage identifier (SWHID) in addition to a DOI", "Data availability statement citing the DOI"], "human_checks": ["Verify that the artifact has a DOI, that it resolves to the archived artifact, and that the paper references it."], "automated_checks": [{"id": "as:doi-resolves", "description": "Verify that the DOI resolves via doi.org.", "command": "curl -fsIL -o /dev/null \"https://doi.org/${doi}\""}]}, "as:ase-2026-available/as:long-term-archival": {"kind": "standard", "key": "as:ase-2026-available/as:long-term-archival", "scope": "Artifacts Available", "scope_id": "as:ase-2026-available", "standard": "as:long-term-archival", "name": "Use a long-term archival service", "principle": "Artifact Availability", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": null, "parameters": [], "guidance": "Authors must deposit their artifacts in a long-term archival service with a declared plan for permanent accessibility. A link to a code-hosting platform (e.g., GitHub) may complement, but not replace, the archived copy.", "examples": ["Software Heritage (for software repositories)", "Zenodo", "FigShare", "Dryad"], "human_checks": ["Verify that the artifact link points to a long-term archival service (not a code-hosting platform, file-sharing service, or personal website) and that the archived content matches the submitted artifact."], "automated_checks": [{"id": "as:artifact-availability-whitelist", "description": "Verify that the submitted artifact is hosted on one long-term archival service.", "command": "[[ \"${artifact_url}\" =~ ${allowed_archives} ]]"}]}, "as:ase-2026-available/as:persistent-identifier": {"kind": "standard", "key": "as:ase-2026-available/as:persistent-identifier", "scope": "Artifacts Available", "scope_id": "as:ase-2026-available", "standard": "as:persistent-identifier", "name": "Persistent Identifier (DOI)", "principle": "Artifact Availability", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": null, "parameters": [], "guidance": "Authors should obtain a DOI for the archived version of the artifact (archives such as Zenodo, FigShare, or Dryad mint one on publication) and reference it in the paper, ideally in a data availability statement. The DOI should identify a specific version, not only a concept record.", "examples": ["Zenodo version DOI (10.5281/zenodo.NNNNNNN)", "Software Heritage identifier (SWHID) in addition to a DOI", "Data availability statement citing the DOI"], "human_checks": ["Verify that the artifact has a DOI, that it resolves to the archived artifact, and that the paper references it."], "automated_checks": [{"id": "as:doi-resolves", "description": "Verify that the DOI resolves via doi.org.", "command": "curl -fsIL -o /dev/null \"https://doi.org/${doi}\""}]}, "as:ase-2026-available/as:license-file": {"kind": "standard", "key": "as:ase-2026-available/as:license-file", "scope": "Artifacts Available", "scope_id": "as:ase-2026-available", "standard": "as:license-file", "name": "LICENSE File", "principle": "Licensing", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "For this badge, the license must ensure public availability of the artifact.", "parameters": [], "guidance": "Provide a LICENSE file at the artifact root stating the terms of use and distribution. Prefer an open-source license for software and an open data license for data. For an availability badge, the license must allow public access to the artifact.", "examples": ["MIT, Apache-2.0, or GPL-3.0 for software", "CC-BY-4.0 or CC0-1.0 for data", "REUSE-compliant LICENSES/ directory for mixed licensing"], "human_checks": ["Verify that the license covers all parts of the artifact and permits the access and use the claimed badges require."], "automated_checks": [{"id": "as:license-file-present", "description": "Check that a LICENSE or COPYING file is present at the artifact root.", "command": "find \"${artifact_root}\" -maxdepth 1 -type f \\( -iname \"LICENSE*\" -o -iname \"LICENCE*\" -o -iname \"COPYING*\" \\) | grep -q ."}]}, "as:ase-2026-functional/as:container-or-vm": {"kind": "standard", "key": "as:ase-2026-functional/as:container-or-vm", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:container-or-vm", "name": "Container or Virtual Machine", "principle": "Reproducible Installation", "display_name": "Docker/Podman or OVF/OVA image — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": ["Executable"], "note": "Other formats require prior approval by the AEC chairs.", "parameters": [], "guidance": "Authors must provide their artifacts as Container (Docker or Podman) or VM (OVF/OVA) images. If the artifact requires a different submission format, authors should contact the artifact evaluation committee chairs.", "examples": ["Docker image", "Podman/OCI image", "OVF virtual machine", "OVA virtual appliance"], "human_checks": ["Verify that the submitted artifact includes a Container (Docker or Podman) or VM (OVF/OVA) image and that the provided instructions explain how to execute it."], "automated_checks": [{"id": "as:container-present", "description": "Verify that a container build definition is present in the artifact package.", "command": "test -f \"${artifact_root}/${container_definition}\""}, {"id": "as:vm-present", "description": "Verify that an OVF or OVA virtual machine artifact is present.", "command": "find \"${artifact_root}\" -type f \\( -name \"*.ovf\" -o -name \"*.ova\" \\)"}]}, "as:ase-2026-functional/as:smoke-test": {"kind": "standard", "key": "as:ase-2026-functional/as:smoke-test", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:smoke-test", "name": "Installation Smoke Tests", "principle": "Reproducible Installation", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": ["Executable"], "note": null, "parameters": [], "guidance": "Authors should provide a short smoke test that exercises the artifact's basic startup and a representative operation, with instructions for running it after installation.", "examples": ["A command that prints the tool's version or help", "A minimal example invocation with expected output"], "human_checks": ["Verify that the artifact includes instructions for running a smoke test and that the test completes successfully after following the documented installation steps."], "automated_checks": []}, "as:ase-2026-functional/as:claim-reproduction": {"kind": "standard", "key": "as:ase-2026-functional/as:claim-reproduction", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:claim-reproduction", "name": "Experimental Claim Reproduction", "principle": "Reproducible Experimental Results", "display_name": "Step-by-step instructions with supported/unsupported claims — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": [], "note": "Second part of the README. States which claims of the paper the artifact supports and how, and which it does not support and why. For software, explains how to reproduce the paper's tables and figures.", "parameters": [], "guidance": "Authors should list the paper's experimental claims and identify which claims the artifact supports, how it supports them, and which claims are not supported.", "examples": [], "human_checks": ["Verify that the artifact documents the paper's experimental claims and explains which are supported or unsupported."], "automated_checks": []}, "as:ase-2026-functional/as:scaled-down-evaluation": {"kind": "standard", "key": "as:ase-2026-functional/as:scaled-down-evaluation", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:scaled-down-evaluation", "name": "Scaled down version for larger evaluation", "principle": "Reproducible Experimental Results", "display_name": "Reduced-scope run (≤ 1 day) — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": ["Executable"], "note": "Experiments that run longer must offer a reduced scope that can be validated in one day or less, with instructions for both the full and the reduced scope.", "parameters": [{"name": "max_reduced_runtime_hours", "value": "24", "description": "Upper bound for the reduced-scope evaluation."}], "guidance": "Authors whose full evaluation takes more than one day should provide a reduced input set that allows representative results to be reproduced more quickly.", "examples": [], "human_checks": ["Verify that a reduced input set is provided and can be used to run a shortened evaluation."], "automated_checks": []}, "as:ase-2026-functional/as:self-contained": {"kind": "standard", "key": "as:ase-2026-functional/as:self-contained", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:self-contained", "name": "Self-contained Artifact", "principle": "Reproducible Installation", "display_name": null, "generic_level": "hygiene", "venue_level": "quality", "applies_to": ["Executable"], "note": "The call asks authors to avoid downloading content over the internet during experiments or tests (a recommendation, not a hard requirement).", "parameters": [], "guidance": "Authors should include or otherwise make available all required dependencies and inputs so that installation, builds, experiments, and tests can run without downloading content over the internet.", "examples": ["Dependency lockfiles and locally available packages", "Scripts that use bundled inputs instead of downloading them"], "human_checks": ["Inspect the installation, build, experiment, and test instructions and scripts for network downloads, then verify that these steps can run with network access disabled."], "automated_checks": []}, "as:ase-2026-functional/as:evaluator-service-credentials": {"kind": "standard", "key": "as:ase-2026-functional/as:evaluator-service-credentials", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:evaluator-service-credentials", "name": "Evaluator Credentials for External Services", "principle": "Access to External Services", "display_name": "Rate-limited API keys via submission form — ASE 2026", "generic_level": "hygiene", "venue_level": null, "applies_to": ["External Service"], "note": "Commercial services (e.g., closed AI models) must stay accessible for the whole review period without compromising reviewers' anonymity. API keys go into the submission form, visible only to the artifact's reviewers and the chairs.", "parameters": [], "guidance": "Keep required external services accessible for the whole evaluation period without requiring evaluators to identify themselves. Provide credentials (e.g., API keys) through the venue's confidential submission channel, never inside the archived artifact, and rate-limit or budget-cap them where possible. Document which results depend on the service, the model or service version used, and, where feasible, cached responses that allow re-running the analysis without the service.", "examples": ["Dedicated, spend-capped API key entered in the submission form", "Recorded LLM responses (e.g., JSONL) with the model version and date"], "human_checks": ["Verify that the external service is reachable with the provided credentials without revealing the evaluator's identity, that no credentials are embedded in the archived artifact, and that the service version is documented."], "automated_checks": []}, "as:ase-2026-functional/as:dataset-description": {"kind": "standard", "key": "as:ase-2026-functional/as:dataset-description", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:dataset-description", "name": "Dataset Description (Datasheet)", "principle": "Dataset Documentation", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": ["Data"], "note": "Context, provenance, ethical and legal statements, storage; features (e.g., columns) and schema; usage scenarios.", "parameters": [], "guidance": "Describe the dataset's context (why and for which study it was created), provenance (sources, collection and processing steps), ethical and legal considerations (consent, ethics approval, anonymization, licenses of the sources), and storage. Document its features and schema (e.g., columns, types, units, codes) and list intended usage scenarios.", "examples": ["DATASHEET.md following Gebru et al., \"Datasheets for Datasets\"", "Codebook or data dictionary describing each column", "Frictionless Data package (datapackage.json) with a table schema"], "human_checks": ["Verify that the documentation covers context, provenance, ethics and legal aspects, storage, schema, and usage scenarios, and that the schema matches the files provided."], "automated_checks": []}, "as:ase-2026-functional/as:open-file-formats": {"kind": "standard", "key": "as:ase-2026-functional/as:open-file-formats", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:open-file-formats", "name": "Open, Widely Supported Formats", "principle": "Accessible File Formats", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": ["Data"], "note": "Non-executable artifacts are a single, optionally compressed package (tar, zip, tar.gz) with instructions and the tools needed to open the files.", "parameters": [], "guidance": "Package non-executable artifacts as a single, optionally compressed archive in a standard format, store contents in open and widely supported formats, and list the tools needed to open each file type. Avoid closed-source libraries, operating systems, or formats unless they are essential to the research.", "examples": ["Archive formats .zip, .tar, .tar.gz", "Data formats CSV, JSON, Parquet; documents PDF, ODT, Markdown"], "human_checks": ["Verify that the artifact is a single standard archive, that its files use open formats or that proprietary formats are justified, and that the tools needed to open them are listed."], "automated_checks": []}, "as:ase-2026-functional/as:proof-to-paper-mapping": {"kind": "standard", "key": "as:ase-2026-functional/as:proof-to-paper-mapping", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:proof-to-paper-mapping", "name": "Mapping from Paper to Mechanized Proof", "principle": "Proof–Paper Correspondence", "display_name": null, "generic_level": "hygiene", "venue_level": null, "applies_to": ["Proof"], "note": "Follow https://proofartifacts.github.io/guidelines/.", "parameters": [], "guidance": "Map each definition, lemma, and theorem in the paper to its counterpart in the proof development, and list every axiom, admitted lemma, or other unproven assumption, following the community guidelines for proof artifacts.", "examples": ["README table \"Theorem 3.2 → src/Soundness.v:soundness\"", "Output of Print Assumptions (Coq/Rocq) or", "https://proofartifacts.github.io/guidelines/"], "human_checks": ["Verify that the mapping covers the paper's formal claims, that the proof checks with the stated prover version, and that all unproven assumptions are disclosed."], "automated_checks": []}, "as:ase-2026-functional/as:system-introspection-dump": {"kind": "standard", "key": "as:ase-2026-functional/as:system-introspection-dump", "scope": "Artifacts Evaluated — Functional", "scope_id": "as:ase-2026-functional", "standard": "as:system-introspection-dump", "name": "Raw System Introspection Dump", "principle": "Hardware Environment Disclosure", "display_name": null, "generic_level": null, "venue_level": "optional", "applies_to": ["Executable"], "note": "Not required by the call; recommended for performance-sensitive results in addition to declaring special hardware in the submission form.", "parameters": [], "guidance": "Authors should capture the output of standard hardware introspection tools (e.g., `lscpu -J`, `lshw -json`, `nproc`, `free -h`, and `nvidia-smi --query-gpu=... --format=csv` where a GPU was used) at the time benchmarks were run, and commit this output alongside the results as `hardware.json` and/or a human-readable `HARDWARE.md` summary at the artifact root. If benchmarks were run on more than one machine, authors should provide one dump per machine, named accordingly (e.g., `hardware-node1.json`).", "examples": ["hardware.json (lscpu -J output)", "hardware.json (lshw -json output)", "HARDWARE.md (hand-summarized from the above)", "hardware-node1.json / hardware-node2.json (multi-machine)"], "human_checks": ["Verify that a hardware description file is present at the artifact root (one per machine, for multi-node benchmarks) and that it identifies at minimum the CPU model, core/thread count, and total memory used during the reported benchmarks; and, where a GPU was used, the GPU model and memory."], "automated_checks": [{"id": "as:hardware-file-present", "description": "Verify that a hardware description file is present in the artifact package.", "command": "find \"${artifact_root}\" -maxdepth 2 -type f \\( -iname \"hardware*.json\" -o -iname \"HARDWARE.md\" \\)"}, {"id": "as:hardware-json-well-formed", "description": "Verify that any hardware.json file is well-formed JSON and contains identifiable CPU information (a \"model name\" field from lscpu, or a \"product\" field under a class=\"processor\" node from lshw).", "command": "jq -e '.. | objects | select(has(\"model name\") or has(\"modelName\") or has(\"product\"))' \"${hardware_json_path}\" > /dev/null"}]}, "as:ase-2026-reusable/as:reuse-documentation": {"kind": "standard", "key": "as:ase-2026-reusable/as:reuse-documentation", "scope": "Artifacts Evaluated — Reusable", "scope_id": "as:ase-2026-reusable", "standard": "as:reuse-documentation", "name": "Documentation for Reuse and Repurposing", "principle": "Artifact Documentation", "display_name": null, "generic_level": "quality", "venue_level": "hygiene", "applies_to": [], "note": "The call encourages explaining how to run the artifact on experiments beyond the paper and documenting the code or data layout; for this badge these are expected.", "parameters": [], "guidance": "In addition to reproduction instructions, document how to use the artifact on inputs or experiments beyond those in the paper, and describe the layout of the code or data so that others can extend or repurpose it.", "examples": ["README section \"Using the tool on your own project\"", "Overview of the source tree and main extension points", "API documentation or a data dictionary"], "human_checks": ["Verify that the documentation explains how to apply the artifact to new inputs and describes its structure well enough that an evaluator could adapt it, e.g., by running it on an input not used in the paper."], "automated_checks": []}, "as:ase-2026-reusable/as:push-button-evaluation": {"kind": "standard", "key": "as:ase-2026-reusable/as:push-button-evaluation", "scope": "Artifacts Evaluated — Reusable", "scope_id": "as:ase-2026-reusable", "standard": "as:push-button-evaluation", "name": "Push-button evaluation", "principle": "Reproducible Experimental Results", "display_name": null, "generic_level": "quality", "venue_level": "quality", "applies_to": ["Executable"], "note": "Long-running experiments should display progress messages.", "parameters": [], "guidance": "Authors should provide a single script that runs the evaluation and generates the figures or experimental data reported in the paper, with progress messages or an expected duration.", "examples": [], "human_checks": ["Run the provided evaluation script and verify that it produces the reported figures or experimental data."], "automated_checks": []}}, "scopes": [{"id": "all", "name": "All submissions"}, {"id": "as:ase-2026-available", "name": "Artifacts Available"}, {"id": "as:ase-2026-functional", "name": "Artifacts Evaluated — Functional"}, {"id": "as:ase-2026-reusable", "name": "Artifacts Evaluated — Reusable"}, {"id": "as:ase-2026-distinguished", "name": "Distinguished Artifact"}], "rows": [{"id": "intro-scope", "section": "Introduction", "anchor": ["The artifact evaluation track aims to", "current edition of ASE (2026)"], "summary": "Artifact evaluation covers artifacts of accepted papers in the Research, Industry Showcase, NIER, and Tool Demonstration tracks.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "venue", "key": "venue:description", "label": "Venue description", "value": "Artifact evaluation for accepted papers of the Research, Industry Showcase, NIER, and Tool Demonstration tracks of ASE 2026 (Munich, 12–16 October 2026). Single-anonymous review with three reviewers per artifact. Badges follow ACM Artifact Review and Badging v1.1; the Results Validated badges (Reproduced, Replicated) are not awarded."}]}, {"id": "intro-badges", "section": "Introduction", "anchor": ["Authors can submit an artifact for", "Artifacts Reusable badges"], "summary": "Authors can apply for the Available and Reusable badges.", "status": "interpreted", "assessment": "The introduction names two badges, but the Evaluation Criteria section lists Functional, Reusable, and Available. The model offers all three.", "proposal": "Decide whether Functional can be applied for on its own. If not, drop the Functional badge and keep its standards as part of Reusable (and align the call's introduction either way).", "model": [{"kind": "badge", "key": "badge:as:ase-2026-available", "name": "Artifacts Available", "badge_kind": "badge", "description": "Author-created artifacts relevant to the paper are placed on a publicly accessible archival repository with a declared plan for permanent accessibility, and a DOI is provided.", "includes": [], "requirement_count": 3}, {"kind": "badge", "key": "badge:as:ase-2026-functional", "name": "Artifacts Evaluated — Functional", "badge_kind": "badge", "description": "The artifact is documented, consistent, complete, exercisable, and includes appropriate evidence of verification and validation.", "includes": [], "requirement_count": 10}, {"kind": "badge", "key": "badge:as:ase-2026-reusable", "name": "Artifacts Evaluated — Reusable", "badge_kind": "badge", "description": "Significantly exceeds minimal functionality: meets all Functional criteria and is very carefully documented and well structured, to the extent that reuse and repurposing are facilitated.", "includes": ["Artifacts Evaluated — Functional"], "requirement_count": 2}]}, {"id": "intro-goal", "section": "Introduction", "anchor": ["Our primary goal will be", "available and reusable"], "summary": "The track's aim is to help authors make artifacts available and reusable.", "status": "out-of-scope", "assessment": null, "proposal": null, "model": []}, {"id": "intro-acm", "section": "Introduction", "anchor": ["Definitions for all badges", "Version 1.1"], "summary": "Badge definitions follow ACM Artifact Review and Badging v1.1.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "venue", "key": "venue:badging_policy", "label": "Badging policy", "value": "https://www.acm.org/publications/policies/artifact-review-and-badging-current"}]}, {"id": "prep-kinds", "section": "1. Prepare the artifact", "anchor": ["Both executable and non-executable artifacts", "may be submitted"], "summary": "Executable and non-executable artifacts are both accepted.", "status": "interpreted", "assessment": "The tag vocabulary has \"executable\" but no \"non-executable\" tag; the model uses \"data\" (and \"proof\") as stand-ins. Requirements scoped to data therefore miss non-executable artifacts that are documents, such as interview guides or qualitative codebooks.", "proposal": "Add a non-executable (or \"documents\") artifact tag and scope the non-executable requirements to it.", "model": [{"kind": "venue", "key": "venue:eligible_artifact_tags", "label": "Eligible artifact types", "value": ["Executable", "Tool", "Prototype", "Data", "Proof", "External Service"]}]}, {"id": "readme-getting-started", "section": "1. Prepare the artifact", "anchor": ["Every artifact submission must include", "Getting Started guide within 30 minutes"], "summary": "Every submission includes a README with a Getting Started guide: description, installation instructions if any, and a smoke test with expected output, completable within 30 minutes.", "status": "faithful", "assessment": "Captured by the README standard with a 30-minute parameter. The separate smoke-test standard is also listed under Functional (executable artifacts only), which duplicates part of the README requirement.", "proposal": "Either drop as:smoke-test from the Functional badge or keep it as an explicit executable-only check and note that the README already requires it.", "model": [{"kind": "ref", "key": "all/as:readme-getting-started"}, {"kind": "ref", "key": "as:ase-2026-functional/as:smoke-test"}]}, {"id": "readme-step-by-step", "section": "1. Prepare the artifact", "anchor": ["Step-by-step instructions, which should contain", "not supported by the artifact (and why)"], "summary": "The README's second part gives detailed reproduction steps and states which paper claims the artifact supports (and how) and which it does not (and why).", "status": "divergent", "assessment": "The call lists this under \"Every artifact submission must include\", so it applies to all submissions, including those applying only for Available. The model requires it only for the Functional badge (and Reusable through inclusion).", "proposal": "Move as:claim-reproduction to the venue-wide required standards.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:claim-reproduction"}]}, {"id": "readme-data", "section": "1. Prepare the artifact", "anchor": ["Data artifacts should cover aspects", "and storage requirements"], "summary": "For data artifacts, the instructions cover context, provenance, ethical and legal statements if relevant, and storage requirements.", "status": "divergent", "assessment": "Same placement issue as the step-by-step instructions: part of the README every submission must include, but modeled under Functional only. The dataset standard also bundles schema and usage scenarios from the non-executable section.", "proposal": "Make as:dataset-description venue-wide, restricted to data artifacts.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:dataset-description"}]}, {"id": "readme-software", "section": "1. Prepare the artifact", "anchor": ["Software artifacts should contain instructions", "how to use the tool"], "summary": "For software artifacts, the instructions show how to reproduce the paper's claims (e.g., tables and figures) and document how to use the tool.", "status": "divergent", "assessment": "Reproducing tables and figures is in the claim-reproduction note. Tool usage documentation is asked of every software artifact, but the model only covers it through reuse documentation for the Reusable badge.", "proposal": "Mention tool usage documentation in the venue note of as:readme-getting-started or as:claim-reproduction.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:claim-reproduction"}, {"kind": "ref", "key": "as:ase-2026-reusable/as:reuse-documentation"}]}, {"id": "readme-proof", "section": "1. Prepare the artifact", "anchor": ["Proof artifacts should cover how", "reviewing proof artifacts"], "summary": "Proof artifacts relate the parts of the proof to the formalisms in the paper, following the linked proof artifact guidelines.", "status": "divergent", "assessment": "Placed under Functional although it is part of the README every submission includes. The generic guidance also asks to list axioms and admitted lemmas, which comes from the linked guidelines rather than the call text.", "proposal": "Make as:proof-to-paper-mapping venue-wide, restricted to proof artifacts.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:proof-to-paper-mapping"}]}, {"id": "readme-encouraged", "section": "1. Prepare the artifact", "anchor": ["we encourage you to include further instructions", "artifact code and layout"], "summary": "Encouraged: instructions for running the artifact on other experiments and documentation of the code and its layout.", "status": "interpreted", "assessment": "The call only encourages this, for all submissions. The model makes it a hygiene requirement for Reusable, reading the ACM definition of Reusable (\"carefully documented ... reuse and repurposing\"). This is stricter than the call's wording.", "proposal": "Keep if the AEC treats reuse documentation as the bar for Reusable; otherwise set its ASE check level to quality.", "model": [{"kind": "ref", "key": "as:ase-2026-reusable/as:reuse-documentation"}]}, {"id": "requirements-file", "section": "1. Prepare the artifact", "anchor": ["a REQUIREMENTS file covering the architecture", "dune-project), if relevant"], "summary": "A REQUIREMENTS file states the architecture and hardware/software requirements; machine-readable dependency files are encouraged.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:requirements-file"}]}, {"id": "status-file", "section": "1. Prepare the artifact", "anchor": ["a STATUS file stating the badge(s)", "the respective badge(s)"], "summary": "A STATUS file names the badges applied for, with a short justification.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:status-file"}]}, {"id": "license-file", "section": "1. Prepare the artifact", "anchor": ["a LICENSE file describing the terms", "license for non-executable artifacts"], "summary": "A LICENSE file states terms of use and distribution. For Available, the license must ensure public availability. Open-source licenses are recommended for executable artifacts, data licenses for others.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:license-file"}, {"kind": "ref", "key": "as:ase-2026-available/as:license-file"}]}, {"id": "file-formats", "section": "1. Prepare the artifact", "anchor": ["All files must be provided as plain text", "packaged with the artifact"], "summary": "README, REQUIREMENTS, STATUS, and LICENSE are plain text (e.g., txt, md) or PDF, packaged with the artifact.", "status": "not-modeled", "assessment": "Only the generic README guidance mentions plain text, Markdown, or PDF. Nothing states the format rule for REQUIREMENTS, STATUS, and LICENSE, and no automated check covers it.", "proposal": "Add a venue note (or a small \"plain-text documentation files\" implementation with a file-type check).", "model": [{"kind": "ref", "key": "all/as:readme-getting-started"}]}, {"id": "exec-definition", "section": "1. Prepare the artifact", "anchor": ["Executable artifacts contain a script", "consider the following"], "summary": "Executable artifacts contain a script, tool, or software system.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "venue", "key": "venue:eligible_artifact_tags", "label": "Eligible artifact types", "value": ["Executable", "Tool", "Prototype", "Data", "Proof", "External Service"]}]}, {"id": "exec-container", "section": "1. Prepare the artifact", "anchor": ["To avoid installation problems", "(AEC) chairs"], "summary": "Executable artifacts are required to come as container (Docker, Podman) or VM (OVF/OVA) images; other formats need the chairs' approval.", "status": "divergent", "assessment": "The call says \"we require\" for every executable artifact. The model requires an image only for the Functional and Reusable badges, so an executable artifact applying only for Available would not need one.", "proposal": "Move as:container-or-vm to the venue-wide standards, restricted to executable artifacts.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:container-or-vm"}]}, {"id": "exec-progress", "section": "1. Prepare the artifact", "anchor": ["The AEC members should be able to evaluate", "completion percentage)"], "summary": "Artifacts should be quick to evaluate; longer runs show progress messages.", "status": "divergent", "assessment": "Progress messages are only recorded as a note on push-button evaluation under Reusable. Push-button evaluation (a single script regenerating all results) is not asked for by the call.", "proposal": "Record progress messages as a note on as:scaled-down-evaluation (Functional), and decide whether push-button evaluation belongs in the ASE model at all.", "model": [{"kind": "ref", "key": "as:ase-2026-reusable/as:push-button-evaluation"}]}, {"id": "exec-reduced-scope", "section": "1. Prepare the artifact", "anchor": ["For long-running experiments, please provide", "in the artifact documentation"], "summary": "Long-running experiments offer a reduced scope that can be validated in one day or less, with instructions for both full and reduced scope.", "status": "interpreted", "assessment": "Content matches, with a 24-hour parameter. Placed under Functional; the call states it for all executable artifacts, which matters little in practice since execution is assessed for Functional.", "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:scaled-down-evaluation"}]}, {"id": "exec-hardware", "section": "1. Prepare the artifact", "anchor": ["In case of specific hardware requirements", "indicate them in the submission form"], "summary": "Specific hardware needs (GPUs, CPU models) are declared in the submission form.", "status": "interpreted", "assessment": "The submission form is not part of the artifact, so this is recorded as a note on the REQUIREMENTS standard. The optional hardware introspection dump has no basis in the call; it was added as a recommendation.", "proposal": "Drop as:system-introspection-dump from the ASE model, or keep it labeled optional.", "model": [{"kind": "ref", "key": "all/as:requirements-file"}, {"kind": "ref", "key": "as:ase-2026-functional/as:system-introspection-dump"}]}, {"id": "exec-no-downloads", "section": "1. Prepare the artifact", "anchor": ["Please try to avoid downloading content", "(to ensure self-containedness)"], "summary": "Avoid downloading content over the internet during experiments or tests.", "status": "faithful", "assessment": "Lowered from the generic hygiene level to quality to match \"please try to avoid\".", "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:self-contained"}]}, {"id": "exec-closed-source", "section": "1. Prepare the artifact", "anchor": ["as well as closed source software libraries", "necessary for your submitted work"], "summary": "Avoid closed-source libraries, frameworks, operating systems, and container formats unless necessary.", "status": "not-modeled", "assessment": "Only the generic guidance of as:open-file-formats mentions closed-source dependencies, and that standard is restricted to data artifacts in the ASE model. Nothing covers executable artifacts.", "proposal": "Add an \"open dependencies\" implementation (quality level) for executable artifacts, or extend as:self-contained's venue note.", "model": []}, {"id": "exec-file-formats", "section": "1. Prepare the artifact", "anchor": ["If possible, widely supported file formats", "CSV/JSON for data)"], "summary": "If possible, use widely supported formats (.zip/.tar.gz, .odt/.pdf, CSV/JSON).", "status": "divergent", "assessment": "The call phrases this as \"if possible\" and places it in the executable section, so it applies to all artifacts. The model applies it only to data artifacts and at the hygiene level.", "proposal": "Remove the data-only restriction and set the ASE check level to quality.", "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:open-file-formats"}]}, {"id": "exec-commercial-services", "section": "1. Prepare the artifact", "anchor": ["In case your artifact relies on commercial services", "rate-limited, if possible"], "summary": "Commercial services (e.g., closed AI models) stay accessible to reviewers for the whole review period without compromising their anonymity, e.g., via API keys in the submission form, rate-limited if possible.", "status": "interpreted", "assessment": "Content matches the venue note. The generic guidance adds two things the call does not ask for: documenting service and model versions, and providing cached responses. Placed under Functional, while the call states it for every artifact that relies on such services.", "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:evaluator-service-credentials"}]}, {"id": "nonexec-package", "section": "1. Prepare the artifact", "anchor": ["Non-executable artifacts only contain data", "tar.gz file)"], "summary": "Non-executable artifacts contain data and documents usable with common tools and can be submitted as one optionally compressed package.", "status": "interpreted", "assessment": "The call says \"can be submitted\"; the model requires a single archive at the hygiene level, for data artifacts only.", "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:open-file-formats"}]}, {"id": "nonexec-tools", "section": "1. Prepare the artifact", "anchor": ["Prepare instructions and list the tools", "required to open the files"], "summary": "Provide instructions and list the tools needed to open the files.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:open-file-formats"}]}, {"id": "nonexec-dataset-context", "section": "1. Prepare the artifact", "anchor": ["In case of datasets: Please document", "and storage requirements"], "summary": "Datasets document context, provenance, ethical and legal statements, and storage requirements.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:dataset-description"}]}, {"id": "nonexec-dataset-schema", "section": "1. Prepare the artifact", "anchor": ["Clearly describe and explain the features", "schema of the dataset"], "summary": "Describe the dataset's features (e.g., columns) and schema.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:dataset-description"}]}, {"id": "nonexec-dataset-usage", "section": "1. Prepare the artifact", "anchor": ["List the usage scenarios", ""], "summary": "List the dataset's usage scenarios.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "as:ase-2026-functional/as:dataset-description"}]}, {"id": "avail-archival", "section": "2. Make the artifact available", "anchor": ["The authors need to make the packaged artifact", "via an archival repository"], "summary": "The packaged artifact must be available to the PC via an archival repository.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:long-term-archival"}]}, {"id": "avail-examples", "section": "2. Make the artifact available", "anchor": ["There are several permanent archival repositories", "Zenodo and FigShare"], "summary": "Examples are Software Heritage, Zenodo, and FigShare.", "status": "faithful", "assessment": "The allowed-archives parameter also accepts Dryad, which the call names in the Available badge definition.", "proposal": null, "model": [{"kind": "ref", "key": "all/as:long-term-archival"}]}, {"id": "avail-github", "section": "2. Make the artifact available", "anchor": ["Please note that platforms that do not guarantee", "do not qualify"], "summary": "Platforms without long-term archival guarantees, such as GitHub, do not qualify.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:long-term-archival"}]}, {"id": "avail-doi", "section": "2. Make the artifact available", "anchor": ["Obtain the assigned DOI", "for the artifact"], "summary": "Obtain a DOI for the artifact.", "status": "interpreted", "assessment": "The generic guidance adds that the DOI should identify a specific version rather than a concept record, which the call does not say. The call also names Software Heritage as an archive, but Software Heritage issues SWHIDs, not DOIs; an artifact archived only there cannot meet the DOI requirement.", "proposal": "Clarify in the call (and the venue note) whether a SWHID is acceptable in place of a DOI.", "model": [{"kind": "ref", "key": "all/as:persistent-identifier"}]}, {"id": "avail-temporary", "section": "2. Make the artifact available", "anchor": ["Temporary drives (e.g., Dropbox", "prone to changes"], "summary": "Dropbox, Google Drive, and personal websites count as non-persistent.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:long-term-archival"}]}, {"id": "abstract-length", "section": "3. Submit the artifact", "anchor": ["Include a short abstract (maximum two pages)", "all the following titles"], "summary": "The artifact includes a short abstract of at most two pages with fixed subsections.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:artifact-abstract"}]}, {"id": "abstract-sections", "section": "3. Submit the artifact", "anchor": ["Paper title", "unusual environments, including GPUs"], "summary": "Subsections: paper title, link to the paper, purpose, badges with reasons, assumed skills and hardware, provenance, and access instructions including OS or GPU needs.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:artifact-abstract"}]}, {"id": "abstract-data", "section": "3. Submit the artifact", "anchor": ["If the data is very large", "its usage scenarios"], "summary": "Large or special-format data ships with instructions; the submission explains the dataset, its schema, and usage scenarios.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:artifact-abstract"}, {"kind": "ref", "key": "as:ase-2026-functional/as:dataset-description"}]}, {"id": "abstract-install-time", "section": "3. Submit the artifact", "anchor": ["If reviewers have to spend more than 30 minutes", "will be accepted"], "summary": "Installation taking reviewers more than 30 minutes makes acceptance unlikely.", "status": "faithful", "assessment": "The call has two 30-minute statements (completing the Getting Started guide, and installing the tool). The model folds both into one getting_started_minutes parameter.", "proposal": null, "model": [{"kind": "ref", "key": "all/as:readme-getting-started"}]}, {"id": "acm-policies", "section": "3. Submit the artifact", "anchor": ["By submitting your article to an ACM Publication", "as per ACM Publications Policy"], "summary": "Authors are subject to ACM Publications Policies, including the policy on research involving human participants.", "status": "out-of-scope", "assessment": "A paper-level policy, not a property of the artifact. Ethics statements for data are covered by as:dataset-description.", "proposal": null, "model": []}, {"id": "review-process", "section": "Review", "anchor": ["uses a single-anonymous review process", "will review each submission"], "summary": "Single-anonymous review; three reviews per artifact.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "venue", "key": "venue:description", "label": "Venue description", "value": "Artifact evaluation for accepted papers of the Research, Industry Showcase, NIER, and Tool Demonstration tracks of ASE 2026 (Munich, 12–16 October 2026). Single-anonymous review with three reviewers per artifact. Badges follow ACM Artifact Review and Badging v1.1; the Results Validated badges (Reproduced, Replicated) are not awarded."}]}, {"id": "review-rejection", "section": "Review", "anchor": ["If AEC members do not find sufficient", "the abstract will be rejected"], "summary": "Without sufficient evidence of availability or reusability under the badge definitions, the submission is rejected.", "status": "not-modeled", "assessment": "The schema has no notion of decision rules. The call says \"abstract\" where it presumably means the artifact submission.", "proposal": "Fix the wording in the call. A decision rule could later be modeled as a badge attribute (e.g., \"rejected if no badge is met\").", "model": []}, {"id": "outcome-one-of", "section": "Evaluation Criteria and Outcome", "anchor": ["An artifact may be awarded one of", "artifact badging guidelines"], "summary": "An artifact may be awarded one of the listed badges.", "status": "interpreted", "assessment": "Read literally, badges are exclusive. The model follows ACM practice: Available combines with Functional or Reusable, and Reusable includes Functional.", "proposal": "Confirm that Available can be combined with the other badges.", "model": [{"kind": "badge", "key": "badge:as:ase-2026-reusable", "name": "Artifacts Evaluated — Reusable", "badge_kind": "badge", "description": "Significantly exceeds minimal functionality: meets all Functional criteria and is very carefully documented and well structured, to the extent that reuse and repurposing are facilitated.", "includes": ["Artifacts Evaluated — Functional"], "requirement_count": 2}]}, {"id": "badge-functional", "section": "Evaluation Criteria and Outcome", "anchor": ["The artifact is found to be documented", "verification and validation"], "summary": "Functional: documented, consistent, complete, exercisable, with evidence of verification and validation.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "badge", "key": "badge:as:ase-2026-functional", "name": "Artifacts Evaluated — Functional", "badge_kind": "badge", "description": "The artifact is documented, consistent, complete, exercisable, and includes appropriate evidence of verification and validation.", "includes": [], "requirement_count": 10}]}, {"id": "badge-reusable", "section": "Evaluation Criteria and Outcome", "anchor": ["The artifact is of a quality that significantly", "reuse and repurposing is facilitated"], "summary": "Reusable: all Functional qualities, plus very careful documentation and structure that facilitate reuse and repurposing.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "badge", "key": "badge:as:ase-2026-reusable", "name": "Artifacts Evaluated — Reusable", "badge_kind": "badge", "description": "Significantly exceeds minimal functionality: meets all Functional criteria and is very carefully documented and well structured, to the extent that reuse and repurposing are facilitated.", "includes": ["Artifacts Evaluated — Functional"], "requirement_count": 2}]}, {"id": "badge-available", "section": "Evaluation Criteria and Outcome", "anchor": ["Author-created artifacts relevant to the paper", "FigShare, or Dryad)"], "summary": "Available: placed on a publicly accessible archival repository with a DOI; the repository has a declared plan for permanent accessibility.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "badge", "key": "badge:as:ase-2026-available", "name": "Artifacts Available", "badge_kind": "badge", "description": "Author-created artifacts relevant to the paper are placed on a publicly accessible archival repository with a declared plan for permanent accessibility, and a DOI is provided.", "includes": [], "requirement_count": 3}, {"kind": "ref", "key": "as:ase-2026-available/as:long-term-archival"}, {"kind": "ref", "key": "as:ase-2026-available/as:persistent-identifier"}]}, {"id": "badge-available-das", "section": "Evaluation Criteria and Outcome", "anchor": ["We recommend adding the DOI link", "end of your paper"], "summary": "It is recommended to cite the DOI in a data availability statement at the end of the paper.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "ref", "key": "all/as:persistent-identifier"}]}, {"id": "award-distinguished", "section": "Evaluation Criteria and Outcome", "anchor": ["Artifacts that go beyond expectations", "feedback from the AEC"], "summary": "A Distinguished Artifact award goes to artifacts beyond expectations, selected from review scores and AEC feedback.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "badge", "key": "badge:as:ase-2026-distinguished", "name": "Distinguished Artifact", "badge_kind": "award", "description": "Awarded to artifacts that go beyond expectations of quality, selected based on review scores and AEC feedback.", "includes": [], "requirement_count": 0}]}, {"id": "faq-purpose", "section": "FAQ", "anchor": ["We want to encourage authors", "improve the submitted artifacts"], "summary": "Purpose of artifact evaluation and the AEC's constructive stance.", "status": "out-of-scope", "assessment": null, "proposal": null, "model": []}, {"id": "faq-qualifies", "section": "FAQ", "anchor": ["Artifacts include (but are not limited to)", "any combination of the above"], "summary": "Artifacts include software, tools, frameworks, datasets, test suites, machine-checkable proofs, or combinations.", "status": "interpreted", "assessment": "Frameworks and test suites have no tag of their own; the model relies on executable, tool, and data to cover them.", "proposal": null, "model": [{"kind": "venue", "key": "venue:eligible_artifact_tags", "label": "Eligible artifact types", "value": ["Executable", "Tool", "Prototype", "Data", "Proof", "External Service"]}]}, {"id": "faq-not-research", "section": "FAQ", "anchor": ["We will assess the artifacts themselves", "by the conference PC)"], "summary": "The AEC assesses the artifact, not the research quality.", "status": "out-of-scope", "assessment": null, "proposal": null, "model": []}, {"id": "faq-results-validated", "section": "FAQ", "anchor": ["The badges indicate that a", "“Artifacts Evaluated” badges"], "summary": "Results Validated badges are not awarded; artifacts of accepted reproducibility or replicability studies can still get Artifacts Evaluated badges.", "status": "faithful", "assessment": null, "proposal": null, "model": [{"kind": "venue", "key": "venue:description", "label": "Venue description", "value": "Artifact evaluation for accepted papers of the Research, Industry Showcase, NIER, and Tool Demonstration tracks of ASE 2026 (Munich, 12–16 October 2026). Single-anonymous review with three reviewers per artifact. Badges follow ACM Artifact Review and Badging v1.1; the Results Validated badges (Reproduced, Replicated) are not awarded."}]}]};
+
+const STATUS = {
+  "faithful": { label: "Faithful", text: "The model says what the call says." },
+  "interpreted": { label: "Interpreted", text: "The model resolves an ambiguity or makes a judgment call; check the choice." },
+  "divergent": { label: "Divergent", text: "The model differs from the call in scope, placement, or strength." },
+  "not-modeled": { label: "Not modeled", text: "The call asks for something the model does not encode." },
+  "out-of-scope": { label: "Out of scope", text: "Process or policy text, deliberately not modeled." },
+};
+const VERDICTS = { ok: "Faithful", change: "Needs change", question: "Question" };
+
+const state = {
+  view: "call",
+  statuses: new Set(),
+  reviewFilter: "all",
+  callText: "",
+  me: null,          // viewer id
+  canWrite: false,
+  reviews: {},       // uid -> {rows: {rowId: {v, note, t}}}
+  mine: { rows: {} },
+  profiles: {},
+  reviewReady: false,
+  reviewMessage: "Loading shared verdicts…",
+};
+
+// ── helpers ──────────────────────────────────────────────────────────────
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return n;
+}
+function storage(fn, fallback) { try { return fn(); } catch (e) { return fallback; } }
+const QUOTES = { "‘": "'", "’": "'", "“": '"', "”": '"', " ": " " };
+function normDisplay(s) { return s.replace(/[‘’“” ]/g, c => QUOTES[c]).replace(/\s+/g, " ").trim(); }
+function fragmentEncode(s) {
+  return encodeURIComponent(s).replace(/-/g, "%2D").replace(/,/g, "%2C").replace(/&/g, "%26");
+}
+function sourceLink(anchor) {
+  const [start, end] = anchor;
+  return DATA.source + "#" + (DATA.source_hash || "") + ":~:text=" + fragmentEncode(start) + (end ? "," + fragmentEncode(end) : "");
+}
+
+// ── call text (pasted, per viewer) ───────────────────────────────────────
+let callNorm = "", callLower = "";
+function setCallText(text) {
+  state.callText = text || "";
+  callNorm = normDisplay(state.callText);
+  callLower = callNorm.toLowerCase();
+}
+function locate(anchor) {
+  if (!callLower) return null;
+  const start = normDisplay(anchor[0]).toLowerCase();
+  const s = callLower.indexOf(start);
+  if (s < 0) return null;
+  let e;
+  if (anchor[1]) {
+    const end = normDisplay(anchor[1]).toLowerCase();
+    const f = callLower.indexOf(end, s);
+    if (f < 0) return null;
+    e = f + end.length;
+  } else {
+    const dot = callLower.indexOf(".", s + start.length);
+    e = dot < 0 ? s + start.length : dot + 1;
+  }
+  // extend to the end of the sentence if the anchor stops just short of it
+  const tail = callNorm.slice(e, e + 3);
+  const m = tail.match(/^[)."”']{1,2}/);
+  if (m) e += m[0].length;
+  return { s, e, text: callNorm.slice(s, e) };
+}
+
+// ── rendering: call → model ──────────────────────────────────────────────
+function levelPill(req) {
+  const eff = req.venue_level || req.generic_level;
+  if (!eff) return null;
+  const changed = req.venue_level && req.venue_level !== req.generic_level;
+  return el("span", { class: "pill pill-level" + (changed ? " changed" : ""),
+    title: changed ? `Generic level: ${req.generic_level}; ASE sets ${req.venue_level}` : "Check level" },
+    changed ? `${eff} (generic: ${req.generic_level})` : eff);
+}
+
+function requirementEntry(req, open) {
+  const summary = el("summary", {},
+    el("div", { class: "entry-top" },
+      el("span", { class: "pill" }, req.scope),
+      el("span", { class: "entry-name" }, req.display_name || req.name),
+      levelPill(req),
+      req.applies_to.length ? el("span", { class: "pill pill-level" }, "only: " + req.applies_to.join(", ")) : null),
+    el("span", { class: "entry-curie" }, req.standard + (req.display_name ? " · " + req.name : "")),
+    req.note ? el("span", { class: "entry-note" }, req.note) : null,
+    req.parameters.length ? el("div", { class: "params" }, req.parameters.map(p =>
+      el("span", {}, el("code", {}, p.name + " = " + (p.value.length > 40 ? p.value.slice(0, 40) + "…" : p.value)), p.description ? " " + p.description : ""))) : null);
+  const body = el("div", { class: "entry-body" },
+    el("div", {}, el("h4", { text: "Generic creation guidance (" + req.principle + ")" }), el("p", { text: req.guidance })),
+    req.examples.length ? el("div", {}, el("h4", { text: "Examples" }), el("ul", {}, req.examples.map(x => el("li", { text: x })))) : null,
+    req.human_checks.length ? el("div", {}, el("h4", { text: "Human checks" }), el("ul", {}, req.human_checks.map(x => el("li", { text: x })))) : null,
+    req.automated_checks.length ? el("div", {}, el("h4", { text: "Automated checks" }), el("ul", {}, req.automated_checks.map(c =>
+      el("li", {}, el("span", { class: "entry-curie" }, c.id), " ", c.description, el("code", { class: "cmd" }, c.command))))) : null,
+    req.parameters.some(p => p.value.length > 40) ? el("div", {}, el("h4", { text: "Full parameter values" }),
+      el("ul", {}, req.parameters.map(p => el("li", {}, el("code", { class: "cmd" }, p.name + " = " + p.value))))) : null);
+  const d = el("details", { class: "entry" }, summary, body);
+  if (open) d.open = true;
+  return d;
+}
+
+function modelEntry(m) {
+  if (m.kind === "ref") return requirementEntry(DATA.requirements[m.key]);
+  if (m.kind === "badge") {
+    return el("div", { class: "entry" }, el("div", { style: "padding:8px 10px;display:grid;gap:4px" },
+      el("div", { class: "entry-top" },
+        el("span", { class: "pill" }, m.badge_kind === "award" ? "Award" : "Badge"),
+        el("span", { class: "entry-name" }, m.name),
+        m.includes.length ? el("span", { class: "pill pill-level" }, "includes " + m.includes.join(", ")) : null,
+        el("span", { class: "pill pill-level" }, m.requirement_count + " badge-specific standard" + (m.requirement_count === 1 ? "" : "s"))),
+      el("span", { class: "entry-curie" }, m.key.replace(/^badge:/, "")),
+      m.description ? el("span", { class: "entry-note" }, m.description) : null));
+  }
+  return el("div", { class: "entry" }, el("div", { style: "padding:8px 10px;display:grid;gap:4px" },
+    el("div", { class: "entry-top" }, el("span", { class: "pill" }, "Venue"), el("span", { class: "entry-name" }, m.label)),
+    el("span", { class: "entry-note" }, Array.isArray(m.value) ? m.value.join(", ") : m.value)));
+}
+
+function verdictsFor(rowId) {
+  const out = [];
+  for (const [uid, doc] of Object.entries(state.reviews)) {
+    const r = doc && doc.rows && doc.rows[rowId];
+    if (r && (r.v || r.note)) out.push({ uid, ...r });
+  }
+  return out;
+}
+
+function reviewBlock(row) {
+  const mine = state.mine.rows[row.id] || {};
+  const wrap = el("div", { class: "review", "data-review": row.id });
+  if (!state.reviewReady) {
+    wrap.append(el("div", { class: "review-off", text: state.reviewMessage }));
+    return wrap;
+  }
+  const disabled = !state.canWrite;
+  const controls = el("div", { class: "review-controls" },
+    el("span", { class: "filter-label", text: "Your verdict" }),
+    Object.entries(VERDICTS).map(([v, label]) => el("button", {
+      class: "vbtn", type: "button", "data-v": v, "aria-pressed": String(mine.v === v), disabled,
+      onclick: () => setVerdict(row.id, mine.v === v ? null : v),
+    }, label)),
+    el("input", { class: "note-input", id: "note-" + row.id, type: "text", placeholder: disabled ? "Read-only for you" : "Note (what should change, or your question)",
+      value: mine.note || "", disabled, "aria-label": "Note for " + row.id,
+      onchange: e => setNote(row.id, e.target.value) }));
+  wrap.append(controls);
+  const others = verdictsFor(row.id).filter(o => o.uid !== state.me);
+  if (others.length) {
+    wrap.append(el("div", { class: "others" }, others.map(o => {
+      const p = state.profiles[o.uid] || {};
+      return el("div", { class: "other" },
+        p.avatarUrl ? el("img", { src: p.avatarUrl, alt: "" }) : null,
+        el("div", {},
+          el("span", { class: "who", text: p.name || "Someone" }), " ",
+          o.v ? el("span", { class: "vtag vtag-" + o.v, text: VERDICTS[o.v] }) : null,
+          o.note ? el("span", { text: " " + o.note }) : null));
+    })));
+  }
+  if (!state.canWrite && state.reviewMessage) wrap.append(el("div", { class: "review-off", text: state.reviewMessage }));
+  return wrap;
+}
+
+function rowVisible(row) {
+  if (state.statuses.size && !state.statuses.has(row.status)) return false;
+  if (state.reviewFilter === "mine-open") { const m = state.mine.rows[row.id]; if (m && m.v) return false; }
+  if (state.reviewFilter === "flagged") { if (!verdictsFor(row.id).some(o => o.v === "change" || o.v === "question")) return false; }
+  return true;
+}
+
+function renderRow(row) {
+  const loc = locate(row.anchor);
+  const call = el("div", { class: "call" },
+    el("div", { class: "cell-label" }, el("span", { text: "Call for artifacts" }), el("span", { class: "row-id", text: row.id })),
+    loc ? el("blockquote", { class: "quote", text: loc.text }) : null,
+    state.callText && !loc ? el("div", { class: "missing", text: "This passage was not found in the pasted text. The call may have changed." }) : null,
+    el("p", { class: "summary", text: row.summary }),
+    !loc ? el("div", { class: "anchor" }, "Passage starts with ", el("em", { text: "“" + row.anchor[0] + "…”" })) : null,
+    el("a", { class: "source-link", href: sourceLink(row.anchor), target: "_blank", rel: "noopener" }, "Open this passage in the call ↗"));
+  const model = el("div", { class: "model" },
+    el("div", { class: "cell-label" }, el("span", { text: "What the model encodes" })),
+    row.model.length ? row.model.map(modelEntry) : el("div", { class: "model-empty", text: "Nothing in the model." }));
+  const verdict = el("div", { class: "verdict" },
+    el("div", { class: "verdict-head" }, el("span", { class: "chip st-" + row.status, text: STATUS[row.status].label }),
+      row.assessment ? null : el("span", { class: "saved", text: STATUS[row.status].text })),
+    row.assessment ? el("p", {}, el("span", { class: "assess-label", text: "Assessment. " }), row.assessment) : null,
+    row.proposal ? el("p", { class: "proposal" }, el("span", { class: "assess-label", text: "Proposed change. " }), row.proposal) : null,
+    reviewBlock(row));
+  return el("article", { class: "row", id: "row-" + row.id }, call, model, verdict);
+}
+
+function renderCallView() {
+  const root = document.getElementById("view-call");
+  root.textContent = "";
+  let section = null, shown = 0;
+  for (const row of DATA.rows) {
+    if (!rowVisible(row)) continue;
+    if (row.section !== section) {
+      section = row.section;
+      const n = DATA.rows.filter(r => r.section === section && rowVisible(r)).length;
+      root.append(el("div", { class: "section-head" }, el("h2", { text: section }), el("span", { text: n + " passage" + (n === 1 ? "" : "s") })));
+    }
+    root.append(renderRow(row));
+    shown++;
+  }
+  if (!shown) root.append(el("div", { class: "empty-state", text: "No rows match the current filters." }));
+}
+
+// ── rendering: model → call ──────────────────────────────────────────────
+function renderModelView() {
+  const root = document.getElementById("view-model");
+  root.textContent = "";
+  root.append(el("p", { class: "summary", style: "margin-top:14px;max-width:80ch;color:var(--muted)",
+    text: "Every requirement ASE 2026 states in venues.yml, grouped by where it applies, with the call passages it is traced to. A requirement with no passage has no basis in the call." }));
+  const cites = {};
+  for (const row of DATA.rows) for (const m of row.model) if (m.kind === "ref") (cites[m.key] = cites[m.key] || []).push(row);
+  const table = el("table", {},
+    el("thead", {}, el("tr", {}, ["Requirement", "Level", "Applies to", "Traced to call passages"].map(h => el("th", { text: h })))));
+  const tbody = el("tbody");
+  for (const scope of DATA.scopes) {
+    const reqs = Object.values(DATA.requirements).filter(r => r.scope_id === scope.id);
+    if (!reqs.length) continue;
+    tbody.append(el("tr", { class: "scope-row" }, el("td", { colspan: "4", text: scope.name })));
+    for (const req of reqs) {
+      const rows = cites[req.key] || [];
+      tbody.append(el("tr", {},
+        el("td", {}, el("span", { class: "entry-name", text: req.display_name || req.name }), el("span", { class: "entry-curie", text: req.standard })),
+        el("td", {}, levelPill(req)),
+        el("td", { text: req.applies_to.length ? req.applies_to.join(", ") : "all artifacts" }),
+        el("td", {}, rows.length ? rows.map(r => el("a", { class: "cite", href: "#call", onclick: (e) => { e.preventDefault(); jumpTo(r.id); } },
+          el("span", { class: "chip st-" + r.status, text: r.id }))) : el("span", { class: "missing", text: "No passage" }))));
+    }
+  }
+  table.append(tbody);
+  root.append(el("div", { class: "req-table-wrap" }, table));
+}
+
+// ── rendering: uncovered call text ───────────────────────────────────────
+function renderUncoveredView() {
+  const root = document.getElementById("view-uncovered");
+  root.textContent = "";
+  if (!state.callText) {
+    root.append(el("div", { class: "empty-state" },
+      "Paste the call text (", el("button", { class: "btn", type: "button", onclick: () => togglePaste(true) }, "Show call text inline"),
+      ") to list the parts of the call that no row covers."));
+    return;
+  }
+  const covered = [];
+  const missing = [];
+  for (const row of DATA.rows) { const loc = locate(row.anchor); if (loc) covered.push([loc.s, loc.e]); else missing.push(row.id); }
+  covered.sort((a, b) => a[0] - b[0]);
+  const gaps = [];
+  let pos = 0;
+  for (const [s, e] of covered) { if (s > pos) gaps.push(callNorm.slice(pos, s)); pos = Math.max(pos, e); }
+  gaps.push(callNorm.slice(pos));
+  const pieces = gaps.map(g => g.trim()).filter(g => g.replace(/[^a-z]/gi, "").length >= 25 && !/\?$/.test(g));
+  root.append(el("p", { class: "summary", style: "margin-top:14px;max-width:80ch;color:var(--muted)",
+    text: `${covered.length} of ${DATA.rows.length} passages located. Below is the remaining call text, excluding short headings and FAQ questions. Each piece is either intentionally left out or a gap in the mapping.` }));
+  if (missing.length) root.append(el("p", { class: "missing", text: "Passages not found in the pasted text: " + missing.join(", ") }));
+  const list = el("div", { class: "uncovered" });
+  if (!pieces.length) list.append(el("div", { class: "empty-state", text: "Every substantive part of the pasted call is covered by a row." }));
+  pieces.forEach(p => list.append(el("blockquote", { class: "quote", text: p })));
+  root.append(list);
+}
+
+// ── chrome ───────────────────────────────────────────────────────────────
+function renderChips() {
+  const root = document.getElementById("status-chips");
+  root.textContent = "";
+  for (const [key, s] of Object.entries(STATUS)) {
+    const n = DATA.rows.filter(r => r.status === key).length;
+    root.append(el("button", { class: "chip st-" + key, type: "button", "aria-pressed": String(state.statuses.has(key)), title: s.text,
+      onclick: () => { state.statuses.has(key) ? state.statuses.delete(key) : state.statuses.add(key); renderChips(); renderCallView(); } },
+      s.label + " ", el("span", { class: "count", text: String(n) })));
+  }
+}
+function renderMeta() {
+  const meta = document.getElementById("meta");
+  meta.append(
+    el("span", {}, "Source: ", el("a", { href: DATA.source + (DATA.source_hash ? "#" + DATA.source_hash : ""), target: "_blank", rel: "noopener", text: "ASE 2026 Call for Artifacts" })),
+    el("span", { text: "Call retrieved " + DATA.retrieved }),
+    el("span", { text: DATA.rows.length + " passages · " + Object.keys(DATA.requirements).length + " requirements in venues.yml" }),
+    el("span", {}, "Built from ", el("code", { text: "review/ase-2026/mapping.yml" })));
+  const legend = document.getElementById("legend");
+  for (const [key, s] of Object.entries(STATUS)) legend.append(el("div", {}, el("span", { class: "chip st-" + key, text: s.label }), s.text));
+  document.getElementById("paste-source").href = DATA.source + (DATA.source_hash ? "#" + DATA.source_hash : "");
+}
+function setView(view) {
+  state.view = view;
+  for (const t of document.querySelectorAll(".tab")) t.setAttribute("aria-selected", String(t.dataset.view === view));
+  for (const v of ["call", "model", "uncovered"]) document.getElementById("view-" + v).hidden = v !== view;
+  document.getElementById("status-chips").hidden = view !== "call";
+  if (view === "model") renderModelView();
+  if (view === "uncovered") renderUncoveredView();
+  if (location.hash !== "#" + view) history.replaceState(null, "", "#" + view);
+}
+function jumpTo(rowId) {
+  state.statuses.clear(); state.reviewFilter = "all";
+  document.getElementById("review-filter").value = "all";
+  renderChips(); setView("call"); renderCallView();
+  const n = document.getElementById("row-" + rowId);
+  if (n) n.scrollIntoView({ block: "start" });
+}
+function togglePaste(open) {
+  const panel = document.getElementById("paste-panel");
+  panel.hidden = open === undefined ? !panel.hidden : !open;
+  document.getElementById("paste-toggle").setAttribute("aria-expanded", String(!panel.hidden));
+  if (!panel.hidden) document.getElementById("paste-input").focus();
+}
+function updatePasteStatus() {
+  const status = document.getElementById("paste-status");
+  if (!state.callText) { status.textContent = "No call text pasted."; status.className = "paste-status"; return; }
+  const found = DATA.rows.filter(r => locate(r.anchor)).length;
+  status.textContent = `${found} of ${DATA.rows.length} passages located in the pasted text.`;
+  status.className = "paste-status " + (found === DATA.rows.length ? "ok" : "warn");
+}
+function onCallTextChanged() {
+  storage(() => localStorage.setItem("ase2026-call-text", state.callText));
+  updatePasteStatus();
+  renderCallView();
+  if (state.view === "uncovered") renderUncoveredView();
+}
+
+// ── shared verdicts (db) ─────────────────────────────────────────────────
+let db = null, writeChain = Promise.resolve();
+function persistMine() {
+  const body = { rows: JSON.parse(JSON.stringify(state.mine.rows)), updated: new Date().toISOString() };
+  writeChain = writeChain.then(() => db.doc("reviews/" + state.me).set(body)).catch(e => {
+    if (e && e.code === "invalid_argument") { state.canWrite = false; state.reviewMessage = "You can read verdicts but not add your own on this page."; renderCallView(); }
+    else { state.reviewMessage = "Your last change was not saved. Try again."; renderCallView(); }
+  });
+}
+function setVerdict(rowId, v) {
+  const r = state.mine.rows[rowId] = { ...(state.mine.rows[rowId] || {}) };
+  r.v = v; r.t = new Date().toISOString();
+  if (!r.v && !r.note) delete state.mine.rows[rowId];
+  persistMine();
+  refreshReview(rowId);
+}
+function setNote(rowId, note) {
+  const r = state.mine.rows[rowId] = { ...(state.mine.rows[rowId] || {}) };
+  r.note = note.trim(); r.t = new Date().toISOString();
+  if (!r.v && !r.note) delete state.mine.rows[rowId];
+  persistMine();
+}
+function refreshReview(rowId) {
+  const old = document.querySelector(`[data-review="${rowId}"]`);
+  const row = DATA.rows.find(r => r.id === rowId);
+  if (old && row) old.replaceWith(reviewBlock(row));
+}
+async function resolveProfiles(user) {
+  const ids = Object.keys(state.reviews).filter(id => id !== state.me);
+  if (!ids.length || !user) return;
+  try { state.profiles = await user.profiles(ids); } catch (e) { /* names stay "Someone" */ }
+}
+async function startReviews() {
+  if (!window.claude || !window.claude.use) {
+    state.reviewMessage = "Shared verdicts work when this page is opened on claude.ai.";
+    renderCallView(); return;
+  }
+  const [dbNs, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+  if (!dbNs || !user) {
+    state.reviewMessage = "Sign in on claude.ai to see and add shared verdicts.";
+    renderCallView(); return;
+  }
+  db = dbNs;
+  state.me = await user.id();
+  const canData = await user.can("data.write");
+  state.canWrite = !!state.me && canData !== false;
+  state.reviewMessage = state.canWrite ? "" : "You can read verdicts but not add your own on this page.";
+  const timer = setTimeout(() => {
+    if (!state.reviewReady) { state.reviewMessage = "Shared verdicts can't be reached right now."; renderCallView(); }
+  }, 10000);
+  db.collection("reviews").onSnapshot(async snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    const next = {};
+    for (const d of snap.docs) next[d.id] = d.data() || {};
+    state.reviews = next;
+    if (!state.reviewReady && state.me && next[state.me]) state.mine = { rows: { ...(next[state.me].rows || {}) } };
+    state.reviewReady = true;
+    await resolveProfiles(user);
+    const active = document.activeElement;
+    const keepFocus = active && active.classList && active.classList.contains("note-input") ? active.id : null;
+    renderCallView();
+    if (keepFocus) { const n = document.getElementById(keepFocus); if (n) n.focus(); }
+  }, err => {
+    clearTimeout(timer);
+    state.reviewMessage = "Shared verdicts are unavailable in this view.";
+    renderCallView();
+  });
+}
+
+// ── boot ─────────────────────────────────────────────────────────────────
+function boot() {
+  renderMeta();
+  renderChips();
+  setCallText(storage(() => localStorage.getItem("ase2026-call-text"), "") || "");
+  document.getElementById("paste-input").value = state.callText;
+  updatePasteStatus();
+  renderCallView();
+
+  for (const t of document.querySelectorAll(".tab")) t.addEventListener("click", () => setView(t.dataset.view));
+  document.getElementById("review-filter").addEventListener("change", e => { state.reviewFilter = e.target.value; renderCallView(); });
+  document.getElementById("paste-toggle").addEventListener("click", () => togglePaste());
+  document.getElementById("paste-input").addEventListener("input", e => { setCallText(e.target.value); onCallTextChanged(); });
+  document.getElementById("paste-clear").addEventListener("click", () => { document.getElementById("paste-input").value = ""; setCallText(""); onCallTextChanged(); });
+  const initial = location.hash.slice(1);
+  setView(["call", "model", "uncovered"].includes(initial) ? initial : "call");
+  window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (["call", "model", "uncovered"].includes(v) && v !== state.view) setView(v); });
+
+  startReviews();
+}
+boot();
+</script>
