@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>ASE 2026 Call Mapping</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -249,7 +250,7 @@ td .entry-curie { display: block; }
   <header class="masthead">
     <div class="eyebrow">Artifact standards · traceability review</div>
     <h1 id="title">ASE 2026 Call Mapping</h1>
-    <p>Each row puts one passage of the ASE 2026 Call for Artifacts next to what <code>venues.yml</code> and <code>data.yml</code> encode for it, with an assessment of the translation. Mark each row as faithful, needing a change, or open for discussion; verdicts are shared with everyone who opens this page.</p>
+    <p>Each row puts one passage of the ASE 2026 Call for Artifacts next to what <code>venues.yml</code> and <code>data.yml</code> encode for it, with an assessment of the translation.<span id="verdict-intro"> Mark each row as faithful, needing a change, or open for discussion; verdicts are shared with everyone who opens this page.</span></p>
     <div class="meta" id="meta"></div>
     <details class="legend-wrap">
       <summary class="source-link" style="cursor:pointer">What the statuses mean</summary>
@@ -265,7 +266,7 @@ td .entry-curie { display: block; }
         <button class="tab" role="tab" id="tab-uncovered" data-view="uncovered" aria-selected="false">Uncovered call text</button>
       </div>
       <span class="spacer"></span>
-      <label class="filter-label" for="review-filter">Show</label>
+      <label class="filter-label" id="review-filter-label" for="review-filter">Show</label>
       <select id="review-filter">
         <option value="all">All rows</option>
         <option value="mine-open">Not yet reviewed by me</option>
@@ -431,6 +432,7 @@ function verdictsFor(rowId) {
 
 function reviewBlock(row) {
   const mine = state.mine.rows[row.id] || {};
+  if (state.local) return null;
   const wrap = el("div", { class: "review", "data-review": row.id });
   if (!state.reviewReady) {
     wrap.append(el("div", { class: "review-off", text: state.reviewMessage }));
@@ -657,7 +659,11 @@ async function resolveProfiles(user) {
 }
 async function startReviews() {
   if (!window.claude || !window.claude.use) {
-    state.reviewMessage = "Shared verdicts work when this page is opened on claude.ai.";
+    // Opened as a local file or from a plain web server: no shared verdicts.
+    state.local = true;
+    document.getElementById("verdict-intro").remove();
+    for (const id of ["review-filter", "review-filter-label"]) document.getElementById(id).hidden = true;
+    document.getElementById("meta").append(el("span", { text: "Opened locally: shared verdicts are off. To comment on a passage, quote its row ID (top right of each row)." }));
     renderCallView(); return;
   }
   const [dbNs, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
